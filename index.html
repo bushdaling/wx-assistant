@@ -648,33 +648,37 @@ function buildBodyHTML(content) {
   const paras = content.split('\n').filter(p => p.trim());
   let html = '';
   let photoIndex = 0;
-  paras.forEach((p, i) => {
+  let paraCount = 0;
+  paras.forEach((p) => {
     const t = p.trim();
     if (!t) return;
+    // 引用注释
     if (t.startsWith('【注】') || t.startsWith('[注]')) {
       html += `<blockquote style="background:#f9f9f9;border-left:4px solid #c41230;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;color:#555;font-size:14px;">${escapeHtml(t)}</blockquote>`;
       return;
     }
-    if (t.startsWith('【') && t.includes('】')) {
+    // 章节标题（单独一行的小标题）
+    if (t.startsWith('【') && t.includes('】') && t.indexOf('】') < 20) {
       const match = t.match(/^【([^】]+)】(.+)/);
       if (match) {
         html += `<h3 style="font-size:16px;color:#222;margin:20px 0 12px;padding-left:10px;border-left:4px solid #c41230;">${escapeHtml(match[1])}${escapeHtml(match[2])}</h3>`;
         return;
       }
     }
-    let para = `<p style="text-indent:2em;margin-bottom:14px;line-height:1.8;color:#333;font-size:15px;">${escapeHtml(t)}</p>`;
-    if (photos.length > 0 && photoIndex < photos.length && (i + 1) % 4 === 0) {
-      html += para;
-      const cap = photos[photoIndex].caption;
-      html += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIndex].src}" style="max-width:100%;border-radius:6px;" />${cap ? `<p style="text-align:center;color:#999;font-size:12px;margin-top:4px;">${escapeHtml(cap)}</p>` : ''}</div>`;
+    // 普通正文段落
+    paraCount++;
+    html += `<p style="text-indent:2em;margin-bottom:14px;line-height:1.8;color:#333;font-size:15px;">${escapeHtml(t)}</p>`;
+    // 每2个完整段落结束后插入一张图片（图片不夹在段落中间）
+    if (photos.length > 0 && photoIndex < photos.length && paraCount % 2 === 0) {
+      const cap = photos[photoIndex].caption || '';
+      html += `<div style="text-align:center;margin:16px 0;"><img src="${photos[photoIndex].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" />${cap ? `<p style="text-align:center;color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</p>` : ''}</div>`;
       photoIndex++;
-    } else {
-      html += para;
     }
   });
+  // 剩余图片全部放文末
   while (photoIndex < photos.length) {
-    const cap = photos[photoIndex].caption;
-    html += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIndex].src}" style="max-width:100%;border-radius:6px;" />${cap ? `<p style="text-align:center;color:#999;font-size:12px;margin-top:4px;">${escapeHtml(cap)}</p>` : ''}</div>`;
+    const cap = photos[photoIndex].caption || '';
+    html += `<div style="text-align:center;margin:16px 0;"><img src="${photos[photoIndex].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" />${cap ? `<p style="text-align:center;color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</p>` : ''}</div>`;
     photoIndex++;
   }
   return html;
@@ -740,25 +744,26 @@ ${html}
   }
   const paras = content.split('\n').filter(p => p.trim());
   let photoIdx = 0;
-  paras.forEach((p, i) => {
+  let paraCount = 0;
+  paras.forEach((p) => {
     const t = p.trim();
     if (!t) return;
-    if (t.startsWith('【') && t.includes('】') && !t.startsWith('【注】')) {
+    if (t.startsWith('【注】') || t.startsWith('[注]')) { preview += `<blockquote style="background:#f9f9f9;border-left:4px solid #c41230;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;color:#555;font-size:14px;">${escapeHtml(t)}</blockquote>`; return; }
+    if (t.startsWith('【') && t.includes('】') && t.indexOf('】') < 20) {
       const m = t.match(/^【([^】]+)】(.+)/);
       if (m) { preview += `<h3 style="font-size:16px;color:#222;margin:18px 0 10px;padding-left:10px;border-left:4px solid #c41230;">${escapeHtml(m[1])}${escapeHtml(m[2])}</h3>`; return; }
     }
-    if (t.startsWith('【注】') || t.startsWith('[注]')) { preview += `<blockquote style="background:#f9f9f9;border-left:4px solid #c41230;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;color:#555;font-size:14px;">${escapeHtml(t)}</blockquote>`; return; }
-    let para = `<p style="text-indent:2em;margin-bottom:14px;line-height:1.8;">${escapeHtml(t)}</p>`;
-    if (photos.length > 0 && photoIdx < photos.length && (i + 1) % 4 === 0) {
-      preview += para;
-      const cap = photos[photoIdx].caption;
-      preview += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIdx].src}" style="max-width:100%;border-radius:6px;" /><div style="color:#999;font-size:12px;margin-top:4px;">${escapeHtml(cap || '')}</div></div>`;
+    paraCount++;
+    preview += `<p style="text-indent:2em;margin-bottom:14px;line-height:1.8;">${escapeHtml(t)}</p>`;
+    if (photos.length > 0 && photoIdx < photos.length && paraCount % 2 === 0) {
+      const cap = photos[photoIdx].caption || '';
+      preview += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIdx].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" /><div style="color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</div></div>`;
       photoIdx++;
-    } else { preview += para; }
+    }
   });
   while (photoIdx < photos.length) {
-    const cap = photos[photoIdx].caption;
-    preview += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIdx].src}" style="max-width:100%;border-radius:6px;" /><div style="color:#999;font-size:12px;margin-top:4px;">${escapeHtml(cap || '')}</div></div>`;
+    const cap = photos[photoIdx].caption || '';
+    preview += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIdx].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" /><div style="color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</div></div>`;
     photoIdx++;
   }
   if (useFooter) {
