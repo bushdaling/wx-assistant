@@ -117,7 +117,9 @@ function checkGate() {
   var ans = document.getElementById('gate-answer').value.trim();
   // 正确答案：保和镇人民政府
   if (ans === '赵美丽') {
-    document.getElementById('gate-screen').style.display = 'none';
+    var gate = document.getElementById('gate-screen');
+    gate.style.display = 'none';
+    gate.remove(); // 彻底移除，避免遮挡
   } else {
     document.getElementById('gate-error').style.display = 'block';
     document.getElementById('gate-answer').value = '';
