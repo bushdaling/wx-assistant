@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>维西赵大美专用公众号助手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacFont,"PingFang SC"," Microsoft YaHei",sans-serif;background:#f5f5f5;padding:15px}
+.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.card-title{font-size:15px;font-weight:bold;color:#333;margin-bottom:12px;padding-left:8px;border-left:3px solid #c41230}
+input[type="text"],textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:8px}
+textarea{min-height:300px;height:60vh;resize:vertical;font-family:inherit;line-height:1.8}
+.btn{background:#c41230;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:14px;cursor:pointer;margin-right:8px;margin-bottom:8px}
+.btn:hover{background:#a01028}
+.btn:disabled{background:#ccc}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.label{font-size:13px;color:#666;margin-bottom:6px}
+.char-count{font-size:12px;color:#999;text-align:right}
+#preview{background:#fff;padding:20px;border-radius:10px;margin-top:12px;display:none}
+#preview h1{font-size:18px;margin-bottom:10px;line-height:1.5}
+#preview p{text-indent:2em;margin-bottom:12px;line-height:1.8}
+#preview img{max-width:100%;display:block;margin:10px auto;border-radius:6px}
+#preview h3{font-size:15px;margin:16px 0 8px;padding-left:8px;border-left:3px solid #c41230}
+#gate{position:fixed;inset:0;background:linear-gradient(135deg,#c41230,#800);display:flex;align-items:center;justify-content:center;z-index:9999}
+#gate-inner{background:#fff;padding:24px;border-radius:12px;max-width:320px;width:90%;text-align:center}
+#gate h2{font-size:16px;margin-bottom:8px}
+#gate p{font-size:12px;color:#666;margin-bottom:16px}
+#gate input{margin-bottom:12px}
+.error{color:#e74c3c;font-size:12px;display:none}
+</style>
+</head>
+<body>
+
+<div id="gate">
+<div id="gate-inner">
+<h2>维西赵大美专用公众号助手</h2>
+<p>请回答问题后进入</p>
+<div class="label">你是谁？</div>
+<input type="text" id="gate-answer" placeholder="请输入答案">
+<button class="btn" onclick="checkGate()" style="width:100%">确认进入</button>
+<div class="error" id="gate-error">答案错误，请重试</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">输入主题，生成文章</div>
+<input type="text" id="theme" placeholder="例如：森林防火、老干部、安全生产、春耕、医保">
+<button class="btn" onclick="generate()">生成文章</button>
+</div>
+
+<div class="card">
+<div class="card-title">编辑内容</div>
+<div class="label">标题</div>
+<input type="text" id="title" placeholder="自动生成或手动输入">
+<div class="label">正文（可手动编辑）</div>
+<textarea id="content" oninput="updateCount()"></textarea>
+<div class="char-count">字数：<span id="count">0</span></div>
+</div>
+
+<div class="card">
+<div class="card-title">配图上传</div>
+<input type="file" id="photos" accept="image/*" multiple onchange="handlePhotos()">
+<div class="label" id="photo-info"></div>
+</div>
+
+<div class="card">
+<div class="card-title">署名信息</div>
+<div class="row">
+<input type="text" id="editor" placeholder="编辑" style="width:80px">
+<input type="text" id="review1" placeholder="一审" style="width:80px">
+<input type="text" id="review2" placeholder="二审" style="width:80px">
+<input type="text" id="final" placeholder="终审" style="width:80px">
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">生成预览</div>
+<button class="btn" onclick="showPreview()">生成预览</button>
+<button class="btn" onclick="copyHTML()">复制HTML</button>
+</div>
+
+<div id="preview"></div>
+
+<script>
+var photos = [];
+
+var titlePrefixes = [
+"学思践悟 细照笃行",
+"守正创新 勇毅前行",
+"踔厉奋发 实干担当",
+"凝心聚力 善作善成",
+"奋楫扬帆 笃行致远",
+"勇挑重担 砥砺奋进",
+"以学促干 以干践学",
+"固本培元 强基铸魂",
+"精准施策 靶向发力",
+"久久为功 善作善成",
+"真抓实干 马上就办",
+"用心用情 精准服务",
+"守牢底线 稳中求进",
+"压实责任 狠抓落实",
+"补齐短板 提质增效"
+];
+
+var templates = {
+
+"森林防火": "[DATE]，保和镇森林防火工作进入关键时期。眼下气温回升快、林区干燥易燃，加之清明将至，农事用火和祭祀用火叠加，森林防火压力陡增。镇党委政府高度重视，及时召开森林防火工作调度会，要求全镇上下绷紧防火弦，牢牢守住安全底线。\n\n全镇辖9个村（社区），林地面积大、分布广，防火任务重。连日来，镇村两级干部全员下沉一线，包村包组包山头，做到山有人管、林有人护、火有人防。林业站工作人员每天巡山，义务扑火队9支共440人24小时待命，确保发现火情打早打小打了。村民们说，这段时间干部天天在村里转，隔三差五就用广播喊防火，大家的弦都绷起来了。\n\n【压实责任，织密防火网】\n镇上和各村签订防火责任书11859份，责任落实到具体地块和具体人。9个村在主要进山路口设立检查卡点22个，对进山人员进行登记和防火宣传，严禁携带火种进山。对痴傻呆哑等特殊人群，明确监护人，逐一落实管控措施。\n\n【强化宣传，增强防火意识】\n利用村村响广播每天早中晚三次播放防火知识，镇村微信群每天推送防火提示。驻村干部走村入户发放宣传资料5000余份，挨家挨户讲防火。镇上还利用赶集日集中宣传，通过案例警示群众，引导文明祭祀新风。\n\n【严格管控，消除火灾隐患】\n开展林区隐患大排查，对坟山墓地、林农交界处等重点区域进行清理，减少可燃物载量。加强对农事用火的管控，在高火险天气严格管控一切野外用火行为。今年以来已查处违规野外用火32起，对当事人进行了批评教育和经济处罚，形成了有力震慑。",
+
+"老干部": "[DATE]，保和镇召开老干部工作座谈会，邀请镇属机关事业单位退休干部代表齐聚一堂，叙旧话新、共谋发展。会上通报了全镇经济社会发展情况，听取了老干部们的意见建议。镇党委书记主持会议，向老干部们致以诚挚问候。\n\n保和镇作为县城城关镇，是州、县、镇三级机关事业单位退休干部集中居住地。全镇现有离退休干部1477名，其中党员1022名、非党员455名。这支队伍政治觉悟高、基层经验丰富、群众基础好，是保和发展不可替代的重要力量。\n\n【政治引领，组织建设有力】\n单独设立离退休干部党支部22个（市直划转17个、镇属5个），覆盖党员832名。转入社区管理的548名党员全部编入网格党小组，按时参加组织生活。镇上每年举办老干部情况通报会2次，重大决策事先征求意见，让老干部知情参政。\n\n【精准服务，生活关怀暖心】\n镇党委领导带头走访慰问，春节、七一等节日看望老干部32人次，支部支委慰问38人次。对身患重病、家庭困难的老干部，实行"一对一"帮扶。4个城市社区党群服务中心均设立老年服务角，配备健康监测设备，提供血压血糖测量、养生咨询等服务，每年联合镇卫生院开展健康义诊2次以上。\n\n【发挥余热，银发力量显担当】\n46名老干部担任基层网格员，11名担任党支部书记，参与社区事务管理和矛盾纠纷调解。老干部们还组成"银发宣讲队"，在社区、学校宣讲党的政策，传承红色基因。老干部们说，退休不褪色，能继续为镇上做点事，心里踏实。",
+
+"安全生产": "[DATE]，保和镇召开安全生产工作专题会议，传达学习省州县安全生产会议精神，通报近期安全生产形势，对全镇安全生产工作进行再安排再部署。会议由镇长主持，镇属各部门负责人、各村（社区）书记参加会议。\n\n保和镇地处县城，辖区人口密集、商业场所众多，安全生产压力较大。全镇有九小场所300余家，加油站、学校、医院、超市等人员密集场所20余处，安全生产工作容不得半点马虎。\n\n【压实责任，绷紧安全弦】\n严格落实"党政同责、一岗双责、齐抓共管"要求，明确各部门、各村职责边界，层层签订安全生产责任书。镇上建立安全生产日报告制度，各村每天报送安全隐患排查情况，确保问题早发现、早处置。\n\n【深入排查，整改隐患】\n镇安监站联合市场监管所、派出所等部门，对辖区内加油站、超市、学校、餐馆等重点场所开展"全覆盖"安全检查。今年累计排查整改隐患200余处，其中重大隐患15处。针对电动车飞线充电问题专项整治，排查整改隐患28处，没收违规充电设备15套。\n\n【宣传教育，提升安全意识】\n开展安全宣传进学校、进企业、进村组活动60余场次，8850余人接受安全教育。利用赶集日集中宣传，通过展板、发放资料、现场讲解等方式普及安全知识。组织重点场所负责人开展应急演练，提升突发事件处置能力。",
+
+"春耕": "[DATE]，保和镇农技站技术人员来到保和村田间地头，指导农户做好春耕备耕工作。田地里，农户们正在翻土、施肥、育秧，一派繁忙景象。镇农技站负责人介绍，今年春耕来得早，镇上早安排早部署，确保不误农时。\n\n一年之计在于春，春耕生产直接关系全年农业收成。保和镇立足实际，引导农户调整产业结构，发展特色产业。今年计划种植中药材21947.5亩、冰葡萄1625.44亩、蔬菜6611亩，让土地产出更高效益。\n\n【技术指导到田头】\n镇上派出农技人员12名，包村包片深入田间地头开展技术培训。技术人员手把手教农户选种、育秧、施肥，针对不同作物提出具体管护方案。同时建立农技服务微信群，农户遇到问题随时可以咨询。\n\n【物资保障到农家】\n镇农业服务中心协调辖区内农资经销商，储备种子、化肥、农药、农膜等春耕物资，品种齐全、货源充足。加强对农资市场监管，严查假冒伪劣产品，让农户用上放心农资。对脱贫户、监测户实行农资代购服务，确保生产不误农时。\n\n【政策宣传进村组】\n驻村干部走村入户宣传强农惠农政策，告知耕地地力保护补贴、农机购置补贴等申报流程。镇村干部帮助农户对接金融机构，解决春耕资金短缺问题。针对部分农户劳动力不足的情况，各村组建互助组，开展春耕帮扶。",
+
+"医保": "[DATE]，保和镇医保缴费工作进入冲刺阶段。镇上召开调度会，通报各村缴费进度，对进度滞后的村进行约谈。会议要求各村在规定时间内完成目标任务，确保应保尽保。\n\n城乡居民医保是惠及广大群众的民心工程。保和镇4.2万常住人口中，大部分农村居民参保意识较强，但仍有部分群众对政策理解不透，存在侥幸心理。镇上采取多种措施，确保医保缴费"不漏一户、不落一人"。\n\n【广泛宣传，提高政策知晓率】\n镇村两级通过村村响广播、微信群推送、入户走访等方式，广泛宣传医保政策的重要意义和缴费方式。重点宣传报销比例、慢特病保障等群众关心的问题，让群众明明白白缴费、清清楚楚受益。\n\n【优化服务，方便群众参保】\n针对不会网上缴费的老年人，各村设立代办点，由村干部上门收取现金后代为缴费。对外出务工人员，通过电话、微信等方式联系，督促其尽快缴费。镇便民服务中心开通绿色通道，随时办理参保登记和缴费业务。\n\n【压实责任，确保应保尽保】\n将医保缴费纳入村级考核，实行日通报、周排名，对进度滞后的村由镇主要领导约谈村支书。目前全镇医保参保率保持在99%以上，脱贫人口和监测对象参保率100%，实现"应保尽保"。",
+
+"人居环境": "[DATE]，保和镇组织各村开展环境卫生大扫除，镇村干部和党员群众一起清理道路两侧、沟渠河岸、房前屋后的垃圾杂物。当天全镇共出动人员600余人次，清理生活垃圾141吨、沟渠368公里，各村面貌焕然一新。\n\n改善农村人居环境是乡村振兴的重要内容。保和镇以"绿美行动"为抓手，持续推进农村人居环境整治，让乡村更美、更宜居。保和镇已成功创建省级绿美乡镇，生态环境持续改善。\n\n【全民参与，共建美好家园】\n各村通过村规民约明确环境卫生责任，实行"门前三包"制度，农户负责自家门前卫生和绿化。村里成立环境卫生监督小组，每周进行检查评比，评选"卫生文明户"并给予适当奖励。村民们说，现在大家比着把门前收拾干净，谁也不想落后。\n\n【建章立制，形成长效机制】\n镇上建立"一周一小扫、一月一大扫"工作机制，将环境整治纳入村规民约。各村配备保洁员18名，负责日常卫生保洁。镇村两级河长巡河常态化，今年已巡河72次，开展"党建+河长制"清河行动108次，清理河道垃圾约6吨。\n\n【绿化美化，提升乡村颜值】\n结合绿美乡村建设，在村组干道两旁种植樱花、香樟等景观树，打造微景观12处。鼓励农户发展庭院经济，种植果树花卉，美化自家庭院。如今走进保和镇的村村寨寨，道路整洁、绿树成荫，一幅幅美丽乡村画卷正徐徐展开。",
+
+"党建": "[DATE]，保和镇召开基层党建工作推进会，回顾总结去年党建工作成效，研究部署今年重点任务。镇党委书记主持会议并讲话，镇全体班子成员、各村（社区）党组织书记参会。\n\n过去一年，保和镇坚持以政治建设为统领，全面推进党的思想建设、组织建设、作风建设、纪律建设，把制度建设贯穿其中，推动基层党建工作取得新成效。22个离退休干部党支部覆盖832名党员，"镇统筹、社区管"工作模式持续深化。\n\n【建强组织，夯实基层基础】\n全镇共有党支部42个，党员1022名。去年新建村级活动场所2个，改造提升5个，基层阵地建设不断加强。严格落实"三会一课"、主题党日等基本制度，党员教育管理更加规范。发展党员15名，培养入党积极分子22名。\n\n【严格管理，提升党员素质】\n各党支部每月开展主题党日活动，党员参与率达95%以上。定期组织党员集中学习党的理论方针政策，提升政治理论水平。开展党员户挂牌亮相活动，党员在产业发展、人居环境整治等工作中当先锋、作表率。\n\n【服务群众，密切党群关系】\n深化"我为群众办实事"实践活动，全镇党员干部认领民生实事120余件，已办结118件。开展党员志愿服务活动36场次，帮助独居老人、留守儿童等群体解决实际困难。党员们在矛盾纠纷调解、安全隐患排查等工作中冲在前面，先锋模范作用充分发挥。",
+
+"主题党日": "[DATE]，保和镇各党支部围绕"学思想、强党性"主题，开展形式多样的主题党日活动。各支部党员齐聚一堂，学理论、谈体会、做奉献，以实际行动践行初心使命。\n\n主题党日是加强党员教育管理、严肃党内政治生活的重要载体。保和镇各党支部精心设计活动内容，创新活动形式，让主题党日既有"党味"又有"回味"。\n\n【深学细悟，筑牢思想根基】\n各党支部组织党员集中学习习近平新时代中国特色社会主义思想，重点学习党的二十大报告和习近平总书记关于基层治理、乡村振兴的重要论述。学习采取领学、研讨、交流等方式，确保学深学透、入脑入心。党员们认真记笔记、写心得，在交流中碰撞思想火花。\n\n【以案为鉴，严守纪律底线】\n结合党纪学习教育，各党支部组织党员集中观看警示教育片，以案说法、以案明纪。通过学习违纪违法典型案例，引导党员知敬畏、存戒惧、守底线，始终保持共产党员的先进性和纯洁性。\n\n【志愿服务，践行初心使命】\n各党支部将主题党日与社会实践相结合，组织党员开展志愿服务。有的支部走访慰问困难群众，有的参加环境卫生整治，有的在交通要道开展文明劝导。党员们以实际行动践行为民宗旨，让群众感受到党员就在身边。",
+
+"矛盾纠纷": "[DATE]，保和镇综治中心调解室里，一场邻里纠纷正在调解。调解员耐心地做双方思想工作，最终握手言和。近年来，保和镇坚持和发展新时代"枫桥经验"，矛盾纠纷就地化解、不上交，成为维护社会和谐稳定的一道屏障。\n\n保和镇地处县城中心，辖区面积368平方公里，辖9个村（社区），常住人口4.2万余人，其中流动人口近万人。人口结构复杂、利益诉求多元，矛盾纠纷易发多发。镇上创新构建多元化解机制，矛盾纠纷调处成功率保持在98%以上。\n\n【三级联动，织密排查网】\n镇上成立矛盾纠纷多元化解领导小组，综治中心实体化运行，配备专职人员5名。9个村（社区）全部建立人民调解委员会，配备专兼职调解员27名。将全镇划分为108个网格，每个网格配备1名网格员，坚持"日巡查、周汇报、月研判"，做到隐患早发现、早介入。\n\n【多元化解，就地化解矛盾】\n建立人民调解、行政调解、司法调解"三调联动"机制。小纠纷由村调委会就地化解，复杂疑难纠纷由镇综治中心牵头，联合司法所、派出所、法庭联动调处。2024年共调处各类矛盾纠纷128起，调处成功率98.4%。\n\n【培育队伍，提升调解能力】\n培育"金牌调解员"12名，定期组织业务培训，提升调解工作规范化水平。调解员们说，只要用心用情、依法依规，很多矛盾其实不难化解。不少群众反映，这几年村里的矛盾少了，邻里关系更和睦了。",
+
+"文明创建": "[DATE]，保和镇永宁社区广场上，一场文明实践活动正在进行。志愿者们向过往群众发放宣传资料，引导大家做文明人、行文明事。近年来，保和镇以培育和践行社会主义核心价值观为引领，持续深化群众性精神文明创建活动。\n\n精神文明建设是乡村振兴的重要内容。保和镇坚持物质文明和精神文明两手抓、两手硬，推动形成"文明健康、绿色环保"的社会新风尚。永宁社区、白鹤山社区成功创建"全州民族团结进步模范集体"。\n\n【价值引领，文明理念深入人心】\n深入推进社会主义核心价值观宣传教育，通过宣传栏、文化墙、广播等多种形式，让文明理念融入日常生活。开展"文明村镇""文明家庭"等群众性精神文明创建活动，引导群众自觉践行文明公约。目前全镇已创建文明村8个、文明户1200余户。\n\n【文化惠民，群众生活丰富多彩】\n各村（社区）因地制宜开展阅读推广活动56场，举办阿勒古歌传承培训、文化惠民演出等文体活动。村民们说，现在打牌赌博的少了，参加文化活动的人多了。法治建设扎实推进，开展普法宣传200余场次，覆盖3.5万余人次。\n\n【环境整治，扮靓乡村颜值】\n结合爱国卫生运动，深入开展农村人居环境整治。"一周一小扫、一月一大扫"纳入村规民约，全面清理农村生活垃圾、沟渠淤泥。开展"世界水日""中国水周"等主题宣传20余场次，覆盖群众6000余人次，公众生态环保意识不断提升。",
+
+"巩固脱贫": "[DATE]，保和镇防返贫监测帮扶工作有序推进。镇村两级干部走村入户，核查农户收入和"三保障"情况，对发现的返贫风险及时预警、精准帮扶。镇上对照巩固拓展脱贫攻坚成果要求，持续做好防返贫动态监测和帮扶工作。\n\n保和镇严格落实"四个不摘"要求，保持现有帮扶政策总体稳定，坚决守住不发生规模性返贫的底线。全镇2025年农村居民人均可支配收入持续增长，脱贫成果持续巩固。\n\n【动态监测，精准识别】\n抓实防返贫动态监测帮扶，建立农户自主申报、干部走访排查、部门数据比对"三线并行"监测机制。2024年新增监测对象22户70人，消除风险户14户58人，制定帮扶措施302条，确保帮扶精准有效。\n\n【产业支撑，助农增收】\n大力培育中药材、冰葡萄、蔬菜、食用菌等特色产业，2025年特色产业总产值历史性突破亿元大关。整合资金1154.8万元实施产业类项目6个，通过土地流转、入股分红、产业务工等方式拓宽群众增收渠道。2025年农村劳动力转移就业12694人，转移就业率达81.42%。\n\n【兜底保障，织密防护网】\n精准落实各项民生政策，2025年发放城镇低保55.17万元（69户81人）、农村低保1103.85万元（998户2558人），特困供养174.93万元，临时救助15.7万元（67人）。医疗保险参保率保持在99%以上，养老保险征缴率达98.12%，民生福祉答卷写满温暖。"
+};
+
+function getToday() {
+var d = new Date();
+return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+}
+
+function checkGate() {
+var ans = document.getElementById("gate-answer").value.trim();
+if (ans === "赵美丽") {
+var gate = document.getElementById("gate");
+gate.style.display = "none";
+} else {
+document.getElementById("gate-error").style.display = "block";
+document.getElementById("gate-answer").value = "";
+}
+}
+
+function generate() {
+var theme = document.getElementById("theme").value.trim();
+if (!theme) {
+alert("请输入主题");
+return;
+}
+var today = getToday();
+var prefix = titlePrefixes[Math.floor(Math.random() * titlePrefixes.length)];
+var title = prefix + "——保和镇开展" + theme + "工作";
+var content = "";
+for (var key in templates) {
+if (theme.indexOf(key) !== -1 || key.indexOf(theme) !== -1) {
+content = templates[key];
+break;
+}
+}
+if (!content) {
+content = "[DATE]，保和镇召开" + theme + "工作推进会，传达学习上级有关会议精神，对全镇" + theme + "工作进行安排部署。镇全体班子成员、各村（社区）书记参加会议。\n\n【高度重视，精心部署】\n镇党委政府高度重视" + theme + "工作，召开专题会议研究部署，明确目标任务和工作责任，细化任务分工，确保各项工作有人抓、有人管、有落实。\n\n【深入一线，狠抓落实】\n镇村两级干部主动下沉，深入一线了解实情，找准工作着力点。各部门对照目标任务，制定具体措施，明确时间节点，协同配合、形成合力，确保各项任务按时保质完成。\n\n【建章立制，形成长效】\n在推进工作的同时，注重总结经验做法，建立健全相关工作制度，推动各项工作常态化、长效化开展，以扎实的工作作风推动保和镇各项事业取得新进步。";
+}
+content = content.replace("[DATE]", today);
+document.getElementById("title").value = title;
+document.getElementById("content").value = content;
+updateCount();
+}
+
+function updateCount() {
+var text = document.getElementById("content").value;
+document.getElementById("count").textContent = text.length;
+}
+
+function handlePhotos() {
+var files = document.getElementById("photos").files;
+photos = [];
+for (var i = 0; i < files.length; i++) {
+var reader = new FileReader();
+reader.onload = function(e) {
+photos.push(e.target.result);
+};
+reader.readAsDataURL(files[i]);
+}
+document.getElementById("photo-info").textContent = "已选择 " + files.length + " 张图片";
+}
+
+function showPreview() {
+var title = document.getElementById("title").value;
+var content = document.getElementById("content").value;
+var editor = document.getElementById("editor").value || "赵倩颖";
+var review1 = document.getElementById("review1").value || "唐艺轩";
+var review2 = document.getElementById("review2").value || "祁建鑫";
+var final = document.getElementById("final").value || "扎西巴丹";
+var today = getToday();
+var html = "";
+html = html + '<img src="cover.jpg" style="max-width:100%;margin-bottom:16px">';
+html = html + '<h1>' + escapeHtml(title) + '</h1>';
+html = html + '<div style="font-size:12px;color:#999;margin-bottom:12px">' + today + ' | 来源：维西傈僳族自治县保和镇人民政府</div>';
+var paras = content.split("\n");
+var photoIndex = 0;
+var paraCount = 0;
+for (var i = 0; i < paras.length; i++) {
+var p = paras[i].trim();
+if (!p) continue;
+if (p.indexOf("【") === 0 && p.indexOf("】") > 0) {
+html = html + "<h3>" + escapeHtml(p) + "</h3>";
+} else {
+html = html + "<p>" + escapeHtml(p) + "</p>";
+paraCount++;
+if (photos.length > 0 && photoIndex < photos.length && paraCount % 2 === 0) {
+html = html + '<img src="' + photos[photoIndex] + '">';
+photoIndex++;
+}
+}
+}
+while (photoIndex < photos.length) {
+html = html + '<img src="' + photos[photoIndex] + '">';
+photoIndex++;
+}
+html = html + '<div style="margin-top:20px;text-align:center">';
+html = html + '<img src="end-photo1.jpg" style="max-width:100%;margin-bottom:8px">';
+html = html + '<img src="end-photo2.jpg" style="max-width:100%">';
+html = html + '</div>';
+html = html + '<div style="margin-top:16px;background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px">';
+html = html + '<div style="margin-bottom:6px"><strong>【供稿】</strong>保和镇党政办</div>';
+html = html + '<div>编辑：' + escapeHtml(editor) + ' | 一审：' + escapeHtml(review1) + ' | 二审：' + escapeHtml(review2) + ' | 终审：' + escapeHtml(final) + '</div>';
+html = html + '</div>';
+document.getElementById("preview").innerHTML = html;
+document.getElementById("preview").style.display = "block";
+}
+
+function copyHTML() {
+var html = document.getElementById("preview").innerHTML;
+if (!html) {
+alert("请先生成预览");
+return;
+}
+var wrapper = '<div style="max-width:677px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;padding:16px;color:#333">' + html + '</div>';
+var ta = document.createElement("textarea");
+ta.value = wrapper;
+document.body.appendChild(ta);
+ta.select();
+document.execCommand("copy");
+document.body.removeChild(ta);
+alert("HTML已复制到剪贴板");
+}
+
+function escapeHtml(str) {
+str = str.replace(/&/g, "&amp;");
+str = str.replace(/</g, "&lt;");
+str = str.replace(/>/g, "&gt;");
+str = str.replace(/"/g, "&quot;");
+return str;
+}
+</script>
+</body>
+</html>
