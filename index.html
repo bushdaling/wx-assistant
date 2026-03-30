@@ -1,1147 +1,263 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📰 维西赵大美专用公众号助手</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #f0f2f5; min-height: 100vh; }
-    
-    .topbar { background: linear-gradient(135deg, #c41230, #8B0000); color: #fff; padding: 16px 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
-    .topbar h1 { font-size: 20px; font-weight: bold; letter-spacing: 2px; }
-    .topbar p { font-size: 12px; opacity: 0.85; margin-top: 4px; }
-    
-    .container { max-width: 960px; margin: 0 auto; padding: 16px; }
-    
-    .steps { display: flex; justify-content: center; margin: 16px 0; gap: 0; }
-    .step { display: flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 20px; font-size: 13px; background: #fff; color: #999; border: 1px solid #eee; transition: all 0.3s; }
-    .step.active { background: #c41230; color: #fff; border-color: #c41230; }
-    .step.done { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
-    .step-num { width: 20px; height: 20px; border-radius: 50%; background: currentColor; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .step-arrow { color: #ccc; font-size: 16px; }
-    
-    .card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .card-title { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; border-left: 4px solid #c41230; padding-left: 10px; }
-    
-    .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-    .template-item { background: #fafafa; border: 2px solid transparent; border-radius: 10px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .template-item:hover { border-color: #c41230; background: #fff5f5; }
-    .template-item.selected { border-color: #c41230; background: #fff5f5; }
-    .template-item .emoji { font-size: 30px; margin-bottom: 6px; }
-    .template-item .name { font-size: 13px; font-weight: bold; color: #333; }
-    .template-item .desc { font-size: 10px; color: #999; margin-top: 3px; }
-    
-    .form-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-    .form-row input, .form-row select, .form-row textarea { padding: 10px 14px; border: 1px solid #eee; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-    .form-row input:focus, .form-row textarea:focus { border-color: #c41230; }
-    .form-row textarea { width: 100%; min-height: 200px; height: 260px; resize: vertical; }
-    .form-row input { flex: 1; min-width: 120px; }
-    .form-label { font-size: 13px; color: #666; margin-bottom: 6px; font-weight: bold; }
-    
-    .ai-input-row { display: flex; gap: 8px; margin-top: 10px; }
-    .ai-input-row input { flex: 1; padding: 12px 14px; border: 2px solid #c41230; border-radius: 8px; font-size: 14px; outline: none; }
-    .btn-ai { padding: 10px 18px; background: linear-gradient(135deg, #c41230, #8B0000); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-    .ai-hint { font-size: 11px; color: #999; margin-top: 6px; }
-    
-    .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
-    .tag-chip { padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; color: #666; }
-    .tag-chip:hover { background: #ffe6e6; }
-    .tag-chip.sel { background: #c41230; color: #fff; }
-    
-    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
-    .photo-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 16/9; background: #f5f5f5; border: 2px dashed #ddd; cursor: pointer; transition: all 0.2s; }
-    .photo-item:hover { border-color: #c41230; }
-    .photo-item img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-item .photo-add { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 24px; }
-    .photo-item .photo-add span { font-size: 11px; margin-top: 4px; }
-    .photo-item .photo-del { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; background: rgba(0,0,0,0.6); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
-    .photo-item input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    
-    .preset-box { background: #fafafa; border-radius: 8px; padding: 12px; font-size: 12px; color: #666; }
-    .preset-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
-    .preset-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c41230; }
-    
-    .action-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
-    .btn { padding: 12px 28px; border: none; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-    .btn:active { transform: scale(0.97); }
-    .btn-gen { background: linear-gradient(135deg, #c41230, #8B0000); color: #fff; }
-    .btn-copy { background: linear-gradient(135deg, #43a047, #2e7d32); color: #fff; }
-    .btn-clear { background: #fff; color: #999; border: 1px solid #ddd; }
-    
-    .preview-frame { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 16px; border: 2px solid #eee; }
-    .preview-phone-header { background: #c41230; color: #fff; padding: 8px 12px; font-size: 12px; display: flex; align-items: center; }
-    .preview-phone-header .dot { display: flex; gap: 3px; }
-    .preview-phone-header .dot span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); }
-    .preview-phone-header .dot span:first-child { background: #fff; }
-    .preview-article { padding: 16px; max-height: 600px; overflow-y: auto; }
-    .preview-title { font-size: 20px; font-weight: bold; color: #222; line-height: 1.5; margin-bottom: 8px; }
-    .preview-meta { font-size: 12px; color: #999; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0; }
-    .preview-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
-    .preview-tags span { background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    .preview-body { font-size: 15px; color: #333; line-height: 1.8; }
-    .preview-body p { text-indent: 2em; margin-bottom: 14px; }
-    .preview-body h3 { font-size: 16px; color: #222; margin: 18px 0 10px; padding-left: 10px; border-left: 4px solid #c41230; }
-    .preview-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 12px; }
-    
-    .html-wrap { background: #1a1a2e; border-radius: 10px; padding: 14px; max-height: 350px; overflow-y: auto; margin-top: 10px; }
-    .html-wrap pre { color: #a8d8ea; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.7; white-space: pre-wrap; word-break: break-all; margin: 0; }
-    
-    .history-item { background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; }
-    .history-item:hover { border-left-color: #c41230; background: #fffafb; }
-    .history-item .info h4 { font-size: 13px; color: #333; }
-    .history-item .info span { font-size: 11px; color: #999; }
-    .history-item .del-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; padding: 4px 8px; }
-    .history-item .del-btn:hover { color: #c41230; }
-    
-    .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-    .toast.show { opacity: 1; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>维西赵大美专用公众号助手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f5f5;padding:15px}
+.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.card-title{font-size:15px;font-weight:bold;color:#333;margin-bottom:12px;padding-left:8px;border-left:3px solid #c41230}
+input[type="text"],textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:8px}
+textarea{min-height:300px;height:60vh;resize:vertical;font-family:inherit;line-height:1.8}
+.btn{background:#c41230;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:14px;cursor:pointer;margin-right:8px;margin-bottom:8px}
+.btn:hover{background:#a01028}
+.btn:disabled{background:#ccc}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.label{font-size:13px;color:#666;margin-bottom:6px}
+.char-count{font-size:12px;color:#999;text-align:right}
+#preview{background:#fff;padding:20px;border-radius:10px;margin-top:12px;display:none}
+#preview h1{font-size:18px;margin-bottom:10px;line-height:1.5}
+#preview p{text-indent:2em;margin-bottom:12px;line-height:1.8}
+#preview img{max-width:100%;display:block;margin:10px auto;border-radius:6px}
+#preview h3{font-size:15px;margin:16px 0 8px;padding-left:8px;border-left:3px solid #c41230}
+#gate{position:fixed;inset:0;background:linear-gradient(135deg,#c41230,#800);display:flex;align-items:center;justify-content:center;z-index:9999}
+#gate-inner{background:#fff;padding:24px;border-radius:12px;max-width:320px;width:90%;text-align:center}
+#gate h2{font-size:16px;margin-bottom:8px}
+#gate p{font-size:12px;color:#666;margin-bottom:16px}
+#gate input{margin-bottom:12px}
+.error{color:#e74c3c;font-size:12px;display:none}
+</style>
 </head>
 <body>
 
-<!-- 访问验证 -->
-<div id="gate-screen" style="position:fixed;inset:0;background:linear-gradient(135deg,#c41230,#8B0000);display:flex;align-items:center;justify-content:center;z-index:99999;">
-  <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-    <div style="font-size:48px;margin-bottom:12px;">📰</div>
-    <h2 style="font-size:18px;color:#333;margin-bottom:8px;">微信公众号内容助手</h2>
-    <p style="font-size:13px;color:#999;margin-bottom:20px;">请回答下方问题，答对才能使用</p>
-    <div id="gate-question" style="background:#f8f8f8;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#555;line-height:1.6;">你是谁？</div>
-    <input type="text" id="gate-answer" placeholder="请输入答案" onkeydown="if(event.key==='Enter')checkGate()" style="width:100%;padding:12px;border:2px solid #eee;border-radius:8px;font-size:14px;text-align:center;margin-bottom:12px;box-sizing:border-box;" />
-    <button onclick="checkGate()" style="width:100%;padding:12px;background:linear-gradient(135deg,#c41230,#8B0000);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;">确认进入</button>
-    <div id="gate-error" style="color:#e74c3c;font-size:12px;margin-top:8px;display:none;">❌ 答案错误，请重试！</div>
-  </div>
+<div id="gate">
+<div id="gate-inner">
+<h2>维西赵大美专用公众号助手</h2>
+<p>请回答问题后进入</p>
+<div class="label">你是谁？</div>
+<input type="text" id="gate-answer" placeholder="请输入答案">
+<button class="btn" onclick="checkGate()" style="width:100%">确认进入</button>
+<div class="error" id="gate-error">答案错误，请重试</div>
 </div>
+</div>
+
+<div class="card">
+<div class="card-title">输入主题，生成文章</div>
+<input type="text" id="theme" placeholder="例如：森林防火、老干部、安全生产、春耕、医保">
+<button class="btn" onclick="generate()">生成文章</button>
+</div>
+
+<div class="card">
+<div class="card-title">编辑内容</div>
+<div class="label">标题</div>
+<input type="text" id="title" placeholder="自动生成或手动输入">
+<div class="label">正文（可手动编辑）</div>
+<textarea id="content" oninput="updateCount()"></textarea>
+<div class="char-count">字数：<span id="count">0</span></div>
+</div>
+
+<div class="card">
+<div class="card-title">配图上传</div>
+<input type="file" id="photos" accept="image/*" multiple onchange="handlePhotos()">
+<div class="label" id="photo-info"></div>
+</div>
+
+<div class="card">
+<div class="card-title">署名信息</div>
+<div class="row">
+<input type="text" id="editor" placeholder="编辑" style="width:80px">
+<input type="text" id="review1" placeholder="一审" style="width:80px">
+<input type="text" id="review2" placeholder="二审" style="width:80px">
+<input type="text" id="final" placeholder="终审" style="width:80px">
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">生成预览</div>
+<button class="btn" onclick="showPreview()">生成预览</button>
+<button class="btn" onclick="copyHTML()">复制HTML</button>
+</div>
+
+<div id="preview"></div>
+
 <script>
+var photos = [];
+var titlePrefixes = [
+"踔厉奋发 实干笃行",
+"凝心铸魂 强基固本",
+"坚守初心 守护平安",
+"银发增辉 余热生辉",
+"防微杜渐 警钟长鸣",
+"不负春光 不误农时",
+"便民服务 暖心保障",
+"文明花开 扮靓家园",
+"持续巩固 稳步推进",
+"学思想 强党性",
+"凝心聚力 共建家园"
+];
+
+var templates = {
+"森林防火": "当前正值森林防火关键期，全镇防火形势严峻。{date}，保和镇召开森林防火工作推进会，对当前防火工作进行全面部署。镇党委书记在会上强调，要时刻绷紧防火这根弦，坚决守住安全底线。\n\n【压实责任，层层落实】\n全镇9个村（社区）全部签订防火责任书，明确各村党支部书记为第一责任人。镇村干部实行24小时值班制度，确保信息畅通、反应迅速。截至目前，全镇共签订责任书11859份，发放宣传资料5000余份。\n\n【加强巡查，消除隐患】\n组建义务扑火队9支共440人，设立防火检查卡点22个。镇林业站工作人员每天深入林区巡查，累计开展巡护183次，出动人员500余人次，查处违规野外用火行为32起。\n\n【广泛宣传，营造氛围】\n通过村村响广播、微信群、宣传车等方式，把防火知识送到每家每户。村民们的防火意识明显增强，不少人说现在干部天天来讲防火，自己也得注意。",
+
+"老干部": "保和镇作为县城城关镇，是州县镇各级机关事业单位退休干部集中居住地。{date}，镇党委召开老干部工作座谈会，听取老干部对镇党委政府工作的意见建议。全镇现有离退休干部1477名，其中党员1022名。\n\n【党建引领，凝聚力量】\n单独设立离退休干部党支部22个，覆盖党员832名。镇党委每年组织老干部开展主题党日活动12次以上，让老干部离岗不离党、退休不褪色。\n\n【精准服务，暖心关怀】\n镇村干部定期走访慰问老干部，及时了解他们的生活情况和实际困难。4个社区党群服务中心都设立了老年服务窗口，提供健康义诊、政策咨询等服务。\n\n【发挥余热，贡献力量】\n46名离退休干部担任基层网格员，参与社区治理。他们走街串巷了解社情民意，成为党委政府和群众之间的桥梁。老干部们说，虽然退休了，但还能为镇上做点事，心里很踏实。",
+
+"安全生产": "安全生产责任重于泰山。{date}，保和镇召开安全生产工作会议，传达学习上级安全生产工作会议精神，对全镇安全生产工作进行全面部署。镇全体班子成员、各村（社区）书记、镇属各部门负责人参加会议。\n\n【全面排查，消除隐患】\n镇安监站联合市场监管所、派出所等部门，对辖区内加油站、超市、学校、餐馆等重点场所开展安全检查。今年累计排查整改隐患200余处，其中重大隐患15处。\n\n【加强宣传，提升意识】\n开展安全知识宣传60余场次，覆盖群众8850余人次。通过入户走访、发放宣传单等方式，把安全知识送到每家每户。\n\n【建章立制，长效管控】\n建立安全生产日报告、周研判制度，各村（社区）每天报送安全情况。镇纪委定期督查，确保各项措施落到实处。",
+
+"春耕": "一年之计在于春。{date}，保和镇农技站组织农技人员深入田间地头，指导农户开展春耕备耕工作。镇党委书记、镇长分别带队到各村调研春耕生产情况。\n\n【技术指导到田头】\n镇农技站派出技术人员12名，深入9个村（社区）开展技术培训。技术人员手把手教农户选种、育苗、施肥，帮助解决生产中的实际问题。\n\n【物资供应有保障】\n镇农业服务中心协调农资经销商备足种子、化肥、农药等物资。今年全镇计划种植中药材21947亩、冰葡萄1625亩、蔬菜6611亩。\n\n【政策宣传入户】\n通过村村响广播、微信群推送等方式，广泛宣传强农惠农政策。镇村干部走村入户，了解农户种植意愿，帮助解决实际困难。",
+
+"医保": "医保缴费工作关系千家万户。{date}，保和镇召开医保缴费工作推进会，对全镇医保缴费工作进行再动员、再部署。各村（社区）党支部书记参加会议。\n\n【广泛宣传，提高知晓率】\n通过村村响广播、微信群、入户走访等多种方式，广泛宣传医保政策。镇村干部挨家挨户发放宣传资料，面对面解答群众疑问。\n\n【优化服务，便民缴费】\n各村（社区）设立医保缴费代办点，对不会使用智能手机的老年人提供帮办代办服务。镇便民服务中心开通医保缴费绿色通道，方便群众就近缴费。\n\n【压实责任，确保完成】\n将医保缴费工作纳入村级考核，实行日通报、周排名。目前全镇医疗保险参保率保持在99%以上，脱贫人口参保率100%。",
+
+"人居环境": "改善农村人居环境是实施乡村振兴战略的重要任务。{date}，保和镇组织镇村干部、党员群众开展环境卫生大扫除活动，全镇9个村（社区）同步行动，掀起人居环境整治热潮。\n\n【全民参与，共同行动】\n镇村干部带头，党员群众积极参与，对村内道路、沟渠、房前屋后进行全面清理。当天共清理生活垃圾141吨、沟渠368公里。\n\n【建立机制，长效管护】\n将环境卫生纳入村规民约，实行门前三包制度。各村成立环境卫生监督小组，定期检查评比，评选卫生文明户。\n\n【美化村容，提升品质】\n结合绿美乡村建设，各村在道路两旁种植花草树木，打造微景观。村民们说，现在村里干净了，住着也舒心。",
+
+"党建": "党的建设是一切工作的统领。{date}，保和镇召开基层党建工作推进会，回顾总结去年党建工作，安排部署今年重点任务。镇全体班子成员、各村（社区）党组织书记参加会议。\n\n【夯实基础，建强堡垒】\n全镇共有党支部42个，党员1022名。去年新建村级活动场所2个，改造提升5个，基层阵地建设不断加强。\n\n【严格管理，规范运行】\n严格落实三会一课、主题党日等制度，党员教育管理更加规范。各党支部每月开展主题党日活动，党员参与率达95%以上。\n\n【发挥作用，服务群众】\n开展党员志愿服务活动36场次，为群众办实事120余件。党员们在人居环境整治、矛盾纠纷调解等工作中冲在前、干在先，先锋模范作用充分发挥。",
+
+"主题党日": "为深入学习贯彻党的二十大精神，推动党纪学习教育走深走实。{date}，保和镇各党支部围绕学思想、强党性主题，开展形式多样的主题党日活动。\n\n【集中学习，提升认识】\n各党支部组织党员集中学习党的二十大报告、《中国共产党纪律处分条例》等内容，引导党员深刻领悟两个确立的决定性意义。\n\n【交流研讨，碰撞思想】\n学习结束后，党员们结合自身工作实际，交流学习心得，分享思想感悟。大家纷纷表示，要把学习成果转化为推动工作的实际行动。\n\n【志愿服务，践行初心】\n各党支部把主题党日与社会实践相结合，组织党员开展环境卫生整治、走访慰问困难群众等志愿服务活动，以实际行动践行为民宗旨。"
+};
+
+function getToday() {
+var d = new Date();
+return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+}
+
 function checkGate() {
-  var ans = document.getElementById('gate-answer').value.trim();
-  // 正确答案：保和镇人民政府
-  if (ans === '赵美丽') {
-    var gate = document.getElementById('gate-screen');
-    gate.style.display = 'none';
-    gate.remove(); // 彻底移除，避免遮挡
-  } else {
-    document.getElementById('gate-error').style.display = 'block';
-    document.getElementById('gate-answer').value = '';
-  }
+var ans = document.getElementById("gate-answer").value.trim();
+if(ans === "赵美丽") {
+var gate = document.getElementById("gate");
+gate.parentNode.removeChild(gate);
+} else {
+document.getElementById("gate-error").style.display = "block";
+document.getElementById("gate-answer").value = "";
 }
-</script>
-
-<div class="topbar">
-  <h1>📰 维西赵大美专用公众号助手</h1>
-  <p>AI智能写作 · 一键排版 · 公众号后台直贴</p>
-</div>
-
-<div class="container">
-  <div class="steps">
-    <div class="step active" id="s1"><div class="step-num">1</div>选模板/给主题</div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="s2"><div class="step-num">2</div>编辑/上传配图</div>
-    <div class="step-arrow">›</div>
-    <div class="step" id="s3"><div class="step-num">3</div>预览/复制发布</div>
-  </div>
-
-  <!-- 第一步 -->
-  <div class="card">
-    <div class="card-title">📑 选择文章类型</div>
-    <div class="template-grid" id="template-grid"></div>
-    <div style="margin-top:18px;border-top:1px solid #f0;padding-top:16px;">
-      <div class="form-label">✏️ 或者直接告诉我主题，AI帮你写全文</div>
-      <div class="ai-input-row">
-        <input type="text" id="ai-theme" placeholder="例如：森林防火、医保缴费、人居环境、主题党日、春耕生产…" />
-        <button class="btn-ai" onclick="console.log('按钮被点击!'); aiGenerate();">🚀 AI生成全文</button>
-      </div>
-      <div class="ai-hint">💡 输入主题后，AI会自动生成符合A镇党政风格的完整文章</div>
-    </div>
-  </div>
-
-  <!-- 第二步 -->
-  <div class="card">
-    <div class="card-title">📝 编辑文章内容</div>
-    <div class="form-row">
-      <input type="text" id="f-title" placeholder="文章标题" style="width:100%" />
-    </div>
-    <div class="form-row">
-      <input type="text" id="f-date" placeholder="发布日期，如：2026年3月29日" />
-      <input type="text" id="f-editor" placeholder="赵倩颖" style="width:80px;" />
-      <input type="text" id="f-review1" placeholder="唐艺轩" style="width:80px;" />
-      <input type="text" id="f-review2" placeholder="祁建鑫" style="width:80px;" />
-      <input type="text" id="f-final" placeholder="扎西巴丹" style="width:80px;" />
-    </div>
-    <div class="form-label">📄 正文（每段回车分隔，【小标题】自动识别）</div>
-    <div id="live-preview" style="display:none;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:#555;line-height:1.8;max-height:40vh;overflow-y:auto;"></div>
-    <textarea id="f-content" oninput="showLivePreview()" placeholder="在此输入文章正文内容…
-
-提示：
-• 每段回车分隔
-• 【小标题】格式 → 自动识别为章节标题
-• 【注】格式 → 自动识别为引用注释
-• 无需手动排版，生成时自动美化"></textarea>
-    <button class="btn-ai" onclick="aiRewrite()" style="margin-top:8px;width:100%;">✨ AI润色 / 续写以上内容</button>
-    
-    <div class="form-label" style="margin-top:14px;">🏷️ 文章标签</div>
-    <div class="tag-row" id="tag-row"></div>
-    
-    <div class="form-label" style="margin-top:14px;">🖼️ 配图上传（自动插入文中）</div>
-    <div class="photo-grid" id="photo-grid">
-      <div class="photo-item" id="photo-add-btn">
-        <div class="photo-add">➕<span>添加配图</span></div>
-        <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotoUpload(this)" />
-      </div>
-    </div>
-    <div id="photo-caption-area" style="margin-top:8px;display:none;">
-      <input type="text" id="f-caption" placeholder="图片说明（选填），如：会议现场图 / 活动合影" style="width:100%;padding:8px 12px;border:1px solid #eee;border-radius:6px;font-size:12px;" />
-    </div>
-  </div>
-
-  <!-- 固定头尾 -->
-  <div class="card">
-    <div class="card-title">🎨 固定排版（头尾统一风格）</div>
-    <div class="preset-toggle">
-      <input type="checkbox" id="opt-header" checked />
-      <label for="opt-header">☑️ 固定头图（每篇文章顶部统一）</label>
-    </div>
-    <div class="preset-box" id="header-preview">
-      <img src="cover.jpg" style="width:100%;border-radius:8px;" />
-      <div style="margin-top:6px;font-size:11px;color:#999;">每次生成文章，头图自动加上</div>
-    </div>
-    <div class="preset-toggle" style="margin-top:12px;">
-      <input type="checkbox" id="opt-footer" checked />
-      <label for="opt-footer">☑️ 固定尾图（每篇文章底部统一）</label>
-    </div>
-    <div class="preset-box" id="footer-preview">
-      <div style="background:#f5f5f5;padding:14px;border-radius:8px;">
-        <div style="text-align:center;font-size:14px;color:#c41230;font-weight:bold;margin-bottom:8px;">— 本文完 —</div>
-        <div style="text-align:center;font-size:11px;color:#666;margin-bottom:8px;">长按识别下方二维码 · 关注保和镇人民政府</div>
-        <div style="display:flex;justify-content:center;gap:12px;">
-          <div style="background:#fff;border:1px solid #eee;padding:8px 12px;border-radius:6px;font-size:10px;color:#999;text-align:center;">
-            <div style="color:#333;margin-bottom:2px;">📢 往期推荐</div>
-            <div>➤ 点击查看历史消息</div>
-          </div>
-        </div>
-        <div style="margin-top:10px;text-align:center;font-size:10px;color:#999;line-height:1.6;">
-          来源：维西傈僳族自治县保和镇人民政府　|　编辑：____　|　审核：____<br>
-          本公众号旨在传播权威政策、传递民生资讯、弘扬文明新风
-        </div>
-      </div>
-      <div style="margin-top:6px;font-size:11px;color:#999;">每次生成文章，尾图自动加上</div>
-    </div>
-  </div>
-
-  <!-- 操作按钮 -->
-  <div class="action-row">
-    <button class="btn btn-gen" onclick="generate()">✨ 生成并预览</button>
-    <button class="btn btn-copy" onclick="copyCode()">📋 复制公众号代码</button>
-    <button class="btn btn-clear" onclick="clearAll()">🗑️ 清空</button>
-  </div>
-
-  <!-- 预览 -->
-  <div id="preview-area" style="display:none;">
-    <div class="preview-frame">
-      <div class="preview-phone-header">
-        <div class="dot"><span></span><span></span><span></span></div>
-        <span style="margin-left:auto;font-weight:bold;">保和镇人民政府</span>
-      </div>
-      <div class="preview-article" id="preview-content"></div>
-    </div>
-  </div>
-
-  <!-- 代码 -->
-  <div id="code-area" style="display:none;">
-    <div class="card">
-      <div class="card-title">📋 公众号后台粘贴代码</div>
-      <p style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.6;">📌 使用方法：全选复制 → 打开微信公众号后台 → 新建图文消息 → 点击"< >"源码按钮 → 粘贴代码 → 预览确认 → 发布</p>
-      <button class="btn btn-copy" onclick="copyCode()" style="margin-bottom:10px;">📋 全选复制代码</button>
-      <div class="html-wrap"><pre id="html-code"></pre></div>
-    </div>
-  </div>
-
-  <!-- 历史 -->
-  <div class="card">
-    <div class="card-title">📁 本地草稿（自动保存）</div>
-    <div id="history-list"><div style="color:#999;font-size:13px;text-align:center;padding:16px;">暂无草稿</div></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-// ==================== 模板配置 ====================
-const TEMPLATES = [
-  { id:'dangjian', name:'党建工作', emoji:'🏛️', desc:'主题党日、学习教育、政治建设' },
-  { id:'huiyi', name:'会议部署', emoji:'📢', desc:'工作会、推进会' },
-  { id:'wenming', name:'文明建设', emoji:'🌾', desc:'文明创建、人居环境' },
-  { id:'laoganbu', name:'老干部', emoji:'🌺', desc:'走访慰问、座谈会' },
-  { id:'anquan', name:'安全生产', emoji:'⚠️', desc:'隐患排查、安全宣传' },
-  { id:'xiaofang', name:'森林防火', emoji:'🌲', desc:'防火宣传、巡山护林' },
-  { id:'chungeng', name:'春耕生产', emoji:'🌱', desc:'农技指导、春播春种' },
-  { id:'fupin', name:'驻村帮扶', emoji:'🤝', desc:'帮扶走访、第一书记' },
-  { id:'zhongdian', name:'重点项目', emoji:'🏗️', desc:'项目推进、招商引资' },
-  { id:'zhengwu', name:'政务动态', emoji:'📋', desc:'一周动态、工作进展' },
-  { id:'tiaoyan', name:'调研接待', emoji:'🔍', desc:'上级调研、参观交流' },
-  { id:'jiti', name:'集体经济', emoji:'💰', desc:'村集体经济、分红' },
-  { id:'weisheng', name:'卫健教育', emoji:'🏥', desc:'健康宣传、疫苗接种' },
-  { id:'siling', name:'四议两公开', emoji:'📜', desc:'村级议事、民主决策' },
-  { id:'qinglan', name:'青年团建', emoji:'🎓', desc:'青年活动、志愿服务' },
-  { id:'lianjian', name:'纪检监察', emoji:'⚖️', desc:'廉政教育、纪律审查' },
-  { id:'tongzhan', name:'统战民族', emoji:'☸️', desc:'民族团结、宗教工作' },
-  { id:'pinzhi', name:'人居品质', emoji:'🏡', desc:'美丽乡村、庭院经济' },
-];
-
-const ALL_TAGS = [
-  '基层党建','乡村振兴','文明创建','民生实事','平安建设',
-  '党风廉政建设','意识形态','安全生产','森林防火','春耕生产',
-  '巩固脱贫','集体经济','卫健教育','青年工作','纪检监察'
-];
-
-// ==================== 公文标题库（大标题+副标题）====================
-const TITLE_POOL = {
-  '党建': ['迎难而上 实干笃行', '凝心铸魂 强基固本', '红色领航 先锋赋能'],
-  '会议': ['高位推动 精准部署', '靠前指挥 层层落实', '压实责任 凝聚合力'],
-  '文明': ['文明花开 扮靓家园', '德润人心 风化城乡', '榜样引领 崇德向善'],
-  '老干部': ['银发增辉 余热生辉', '桑榆非晚 为霞满天', '夕阳似火 情暖人心'],
-  '安全': ['防微杜渐 警钟长鸣', '人民至上 生命至上', '消除隐患 筑牢防线'],
-  '防火': ['学以增智 学以致用', '以练为战 守护青山', '预防在前 管控在先'],
-  '春耕': ['不负春光 不误农时', '田间地头 播种希望', '科技赋能 助农增收'],
-  '帮扶': ['巩固成果 推进振兴', '精准施策 靶向发力', '持续巩固 稳步推进'],
-  '项目': ['提速增效 蓄势赋能', '大干快上 拼出精彩', '精准招商 蓄力前行'],
-  '政务': ['一周一晒 实干争先', '比学赶超 实绩说话', '聚焦民生 实事实办'],
-  '调研': ['深入一线 把脉问诊', '问计于民 问政于需', '精准把脉 对症开方'],
-  '经济': ['多点发力 强村富民', '集体破题 增收致富', '产业驱动 引擎轰鸣'],
-  '卫健': ['健康惠民 情暖万家', '预防为主 守护健康', '服务提质 温暖民心'],
-  '四议': ['民主议事 阳光村务', '集思广益 科学决策', '村民自治 透明公开'],
-  '青少': ['青春有约 奋斗无悔', '志愿服务 青年先行', '挺膺担当 不负韶华'],
-  '纪检': ['正风肃纪 永不止步', '以案为鉴 警钟长鸣', '廉韵清风 洁己爱人'],
-  '统战': ['民族团结 籽籽同心', '凝聚共识 汇聚力量', '守望相助 团结奋进'],
-  '人居': ['齐心协力 共建家园', '绿美乡村 入画入诗', '美丽庭院 扮靓乡村'],
-  '医保': ['便民服务 暖心保障', '医保兜底 惠泽民生', '应保尽保 守护健康'],
-  '默认': ['迎难而上 扎实工作', '埋头苦干 务求实效', '稳步推进 不负使命']
-};
-
-// 随机获取一个标题（根据主题关键词匹配）
-function getTitleByTheme(theme) {
-  let best = TITLE_POOL['默认'];
-  for (const [key, titles] of Object.entries(TITLE_POOL)) {
-    if (theme.includes(key) || key.includes(theme)) {
-      best = titles;
-      break;
-    }
-  }
-  return best[Math.floor(Math.random() * best.length)];
-}
-
-// 获取当天日期（中文格式）
-function getTodayDate() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  return `${year}年${month}月${day}日`;
-}
-
-// AI_DB（含大标题、多备选副标题、完整正文、段落结构）
-const AI_DB = {
-  '森林防火': {
-    title: '学以增智 学以致用——保和镇开展森林防火安全工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），随着气温持续回升，森林火险等级居高不下，森林防火形势日趋严峻。为切实保障全镇人民群众生命财产安全和森林资源安全，保和镇严格按照省、州、县森林草原防火工作会议精神，围绕"三个强化"稳步推进森林防火各项工作，筑牢森林防火安全屏障。
-
-【强化组织领导，压实工作责任】
-镇党委、政府认真对待森林防火工作，先后召开专题会议4次，及时传达学习省州县森林草原防火工作会议精神，研究部署全镇森林防火工作。调整充实镇森林防火指挥部成员，明确各村（社区）党支部书记为本辖区森林防火第一责任人，层层签订责任书，确保责任落实到山头、地块、人头。2025年，全镇共签订森林防火责任承诺书11859份，发放森林防火告知书5000余份，悬挂森林防火宣传标语120余条。
-
-【强化队伍建设，提升应急能力】
-组建镇、村两级义务扑火队9支440人，设立镇级森林防火检查卡点22个，做到重点区域全覆盖。全年累计开展防火督查与巡护183次，出动巡护人员500余人次，查处违规野外用火行为32起，对相关责任人依法进行了批评教育和经济处罚。定期组织扑火队员开展实战演练和业务培训，有效提升了全镇森林火灾预防和扑救能力，确保"打早、打小、打了"，火灾风险得到有效管控。
-
-【强化宣传教育，营造全民防火氛围】
-充分运用广播、微信群、宣传车、入户走访等多种方式，全方位、多渠道开展森林防火宣传教育。结合"3·12"植树节、"5·12"防灾减灾日等重要节点，开展集中宣传6场次，发放宣传资料3000余份，发送预警短信5000余条。不断推进林长制工作，全镇森林覆盖率稳定保持在74%以上，严格落实24小时值班和领导带班制度，确保信息畅通、反应迅速、处置有力，让绿水青山真正成为保和的亮丽名片。`
-  },
-  '矛盾纠纷': {
-    title: '坚守初心 守护平安——保和镇开展矛盾纠纷排查化解工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），保和镇地处维西县城中心，辖区面积368平方公里，辖9个村（社区），常住人口4.2万余人，其中流动人口近万人，是多民族聚居、城乡交织的典型区域。近年来，保和镇坚持和发展新时代"枫桥经验"，创新构建"333"矛盾纠纷多元化解机制，连续五年未发生重大安全生产事故，矛盾纠纷调处成功率保持在98%以上。
-
-【构建"三级联动"工作体系，织密维稳"防护网"】
-成立由镇党委书记任组长、镇长任副组长的矛盾纠纷多元化解工作领导小组，下设综治中心实体化运行，配备专职工作人员5名。9个村（社区）全部建立人民调解委员会，配备专兼职调解员27名。将全镇划分为108个网格，每个网格配备1名网格员，依托"五网合一"网格化管理机制，坚持"日巡查、周汇报、月研判"，确保矛盾纠纷隐患早发现、早预警、早处置。
-
-【健全"三早三移"调处机制，把好维稳"关口"】
-建立"线上+线下"双渠道摸排机制。2024年共排查各类矛盾纠纷隐患132起，全部建立台账跟踪化解。按照"分级负责、归口调处"原则，一般性纠纷由村级调解委员会就地化解；复杂疑难纠纷由镇综治中心牵头，联合司法所、派出所、法庭等部门联动调处。实行矛盾纠纷化解"销号制"，2024年共调处各类矛盾纠纷128起，调处成功率98.4%。
-
-【创新"三调联动"工作模式，形成维稳"合力"】
-人民调解打基础，建立镇、村、组三级人民调解组织网络，培育"金牌调解员"12名。行政调解解难题，建立行政调解与人民调解衔接机制，2024年成功调处征地拆迁纠纷8起、劳资纠纷12起。司法调解强保障，建立"诉调对接"机制，保和法庭"诉前调解室"2024年诉前调解成功率达65%。
-    `
-  },
-  '老干部': {
-    title: '银发增辉 余热生辉——保和镇开展老干部服务管理工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），保和镇作为县城城关镇，是州、县、镇各级机关事业单位退休干部集中居住地，全镇现有离退休干部1477名，其中党员1022名、非党员455名，呈现居住集中、层级多元、需求多样、管理难度大的"四"特点。镇党委立足城区实际，探索推行"镇统筹、社区管"工作模式，推动老干部工作与基层治理、民生服务协同发展，取得了良好成效。
-
-【党建引领，社区主阵地作用充分彰显】
-紧扣"镇统筹、社区管"工作定位，以四个城市社区为主阵地，全面构建属地化、全域化、精细化的老干部服务管理新格局。1477名离退休干部"全员进网"，按居住划片纳入对应村（社区）网格，建立"基础名册+动态台账"双轨管理，实现"底数清、情况明、信息准"。单独设立离退休干部党支部22个（市直划转17个，镇属5个），覆盖党员832名。对转入社区的548名党员及时编入网格党小组，"三会一课"、主题党日、政治生日等制度有效落实，党员教育管理"不断线、不缺位"。政治过硬、基层经验丰富、群众威望高的离退休干部担任社区党组织、居委会兼职委员，参与重大议事决策，畅通老干部"有身份、有平台、有话语权"的制度化渠道。
-
-【精准暖心，服务触角延伸到"家"门口】
-坚持"日常服务在社区、困难帮扶在社区、活动开展在社区"，做实"三个常态化"。镇党委累计慰问走访13人次、支部支委慰问38人次；网格员"包联到户"、党员"结对到人"，做到"有困难必掌握、有诉求必回应"。4个社区党群服务中心全覆盖设立"老年爱心服务角"，配备健康监测仪、按摩椅等适老化设施；联合镇卫生院每年开展2次以上健康义诊、慢病随访、养生科普；重要节庆常态化组织书画交流、棋牌娱乐、文体展演等精神文化活动。"四个及时"确保政治待遇、生活待遇"双落地"——及时传达上级精神、及时通报镇情村情、及时解读政策、及时帮办代办服务事项。
-
-【银发赋能，"夕阳红"建功基层治理第一线】
-4个城市社区均组建"银发宣讲队"，老干部担任宣讲成员，专题宣讲党的方针政策、惠民举措，推动"党的声音"直达基层、深入人心。46名离退休干部担任基层网格员、11名担任党支部书记，第一时间收集社情民意、群众诉求、风险隐患，成为党委政府与人民群众之间的"桥梁纽带"。邀请老干部参与社区事务、民生项目、作风建设监督，以"精准监督"促"基层治理提质增效"，银发资源持续转化为基层治理效能。`
-
-  },
-  '人居环境': {
-    title: '齐心协力 共建家园——保和镇开展人居环境整治提升工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），保和镇牢固树立和践行"绿水青山就是金山银山"理念，以林长制、河长制为抓手，坚持生态优先、绿色发展，协调推进生态保护与治理，成功创建省级绿美乡镇。
-
-【聚焦重点，精准发力】
-建立"一周一小扫、一月一大扫"工作机制并将其纳入村规民约，深入实施农村人居环境整治提升行动，推动形成全民参与的良好氛围。2025年，全镇清理农村生活垃圾141吨、淤泥73吨、沟渠368公里，农村面貌焕然一新。
-
-【全民参与，共建共享】
-充分发挥基层党组织战斗堡垒作用和党员先锋模范作用，结合主题党日、新时代文明实践等活动，广泛开展"清洁家园"志愿服务。各村（社区）因地制宜开展阅读推广活动56场，成功举办阿勒古歌传承培训、文化惠民演出等文体活动，有效丰富群众精神文化生活。
-
-【建章立制，长效管护】
-建立健全农村人居环境长效管护机制，明确镇、村、组三级管护责任。推行"门前三包"制度，将人居环境纳入村规民约。镇村两级河长巡河实现常态化（镇级河长72次/年），开展"党建+河长制"清河行动108次，清理河道约25公里、垃圾约6吨，河道面貌显著改善。
-    `
-  },
-  '安全生产': {
-    title: '防微杜渐 警钟长鸣——保和镇开展安全生产排查整治工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），保和镇严格落实安全生产"党政同责、一岗双责"和"三管三必须"要求，对辖区内各类重点场所、九小场所持续开展巡查整治，全年排查整改隐患200余处、重大隐患15处，整治电动车隐患28处。
-
-【统筹安排，明确重点】
-镇党委、政府第一时间召开专题会议，传达上级安全生产会议精神，制定印发专项行动方案，明确排查重点、工作要求和责任分工。建立隐患台账并实行闭环管理，确保发现问题及时整改到位。
-
-【深入排查，立行立改】
-镇安监站联合市场监管所、派出所等部门，组成联合检查组，对辖区内加油站、超市、学校、餐馆等重点场所开展"全覆盖"安全隐患排查。开展宣教演练60余场次，覆盖8850余人次，群众安全意识显著提升。
-
-【建章立制，长效管控】
-建立健全安全生产隐患排查治理长效机制，实行安全生产"日报告、周研判"制度。深化"五网合一"工作机制，推动网格化管理与安全生产协同发展，各村（社区）矛盾纠纷调处成功率超过98%，确保全镇安全生产形势持续稳定。
-    `
-  },
-  '春耕': {
-    title: '不负春光 不误农时——保和镇开展春耕备耕工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），眼下正值春耕备耕的关键时节，保和镇抢抓农时、主动作为，通过"三个聚焦"工作法，稳步推进春耕备耕各项工作，为全年农业生产开好局、起好步。
-
-【聚焦技术指导，送"技"下乡】
-镇农技站组织农技人员深入田间地头，面对面、手把手指导农户做好春耕备耕工作。重点围绕科学选种、配方施肥、病虫害防治等内容开展技术培训，帮助群众解决生产中遇到的实际问题。各村（社区）依托本地资源禀赋，深化"一镇一特、一村一品"发展模式，中药材种植已成为群众增收的重要渠道。
-
-【聚焦物资保障，备"粮"先行】
-镇农业服务中心积极协调辖区内农资经销商，提前备足种子、化肥、农药、农膜等春耕物资，并加强农资市场监管，严厉打击制售假冒伪劣农资行为，切实保障农民群众合法权益。
-
-【聚焦政策宣传，入"户"到人】
-通过村村响广播、微信群推送、入户走访等方式，广泛宣传各类强农惠农富农政策，积极推广农业机械化和农业保险，提高农业生产抗风险能力，引导农户积极调整产业结构，发展特色优势产业。`
-  },
-  '医保': {
-    title: '便民服务 暖心保障——保和镇开展医保缴费服务工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），城乡居民基本医疗保险是惠及广大群众的民心工程。保和镇认真筹划、精准发力，确保医保缴费"应缴尽缴、不漏一人"，2025年脱贫人口基本医疗保险参保率持续保持100%。
-
-【宣传引导，提高知晓率】
-通过村村响广播、微信群推送、入户走访等多种方式，广泛宣传医保政策的重要意义和缴费方式。针对外出务工人员，镇村两级干部逐一打电话、发微信告知，确保政策宣传全覆盖、无死角。
-
-【优化服务，解决实际困难】
-针对部分群众不会网上缴费的问题，镇村两级干部主动上门服务，"手把手"指导群众使用手机缴费。对行动不便的老人和残疾人，村干部主动上门收取现金后代为缴费，让群众"零跑腿"完成参保缴费。全镇医疗保险参保率持续保持在99%以上，构筑起坚实的民生保障网。
-
-【压实责任，确保应保尽保】
-将医保缴费工作纳入镇村两级干部绩效考核，建立日通报、周排名制度。对进度滞后的村，由镇主要领导约谈村党支部书记，确保全镇医保缴费工作按期完成。
-    `
-  },
-  '文明创建': {
-    title: '文明花开 扮靓家园——保和镇开展精神文明建设工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），保和镇始终将精神文明建设作为推动经济社会发展的重要抓手，坚持物质文明和精神文明两手抓、两手硬，推动形成"文明健康、绿色环保"的社会新风尚。
-
-【价值引领，文明理念深入人心】
-以社会主义核心价值观为引领，广泛开展公民道德建设、诚信教育等主题活动。深入开展"文明村镇""文明家庭"等群众性精神文明创建活动，引导群众自觉践行文明公约。法治建设稳步推进，开展普法宣传200余场次，覆盖3.5万余人次，群众办事依法、遇事找法意识有效提升。
-
-【文化惠民，群众生活丰富多彩】
-各村（社区）因地制宜开展阅读推广活动56场，成功举办阿勒古歌传承培训、文化惠民演出等文体活动。永宁社区、白鹤山社区成功创建"全州民族团结进步模范集体"，民族团结氛围日益浓厚。
-
-【环境整治，扮靓乡村颜值】
-结合爱国卫生运动，深入开展农村人居环境整治。将"一周一小扫、一月一大扫"纳入村规民约，全面清理农村生活垃圾、沟渠淤泥。开展"世界水日""中国水周"等主题宣传20余场次，覆盖群众6000余人次，公众生态环保意识不断提升。
-    `
-  },
-  '巩固脱贫': {
-    title: '持续巩固 稳步推进——保和镇开展防返贫监测帮扶工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），保和镇始终将"三保障"和饮水安全作为重中之重，常态化排查解决风险隐患，持续巩固拓展脱贫攻坚成果，坚决守住不发生规模性返贫底线。
-
-【动态监测，精准识别】
-抓实动态监测帮扶，年内新增监测对象22户70人，消除风险户14户58人，制定帮扶措施302条。通过常态化监测与精准识别，确保各项帮扶措施不漏一户、不落一人。
-
-【产业支撑，助农增收】
-大力培育中药材、冰葡萄、蔬菜、食用菌等特色产业，2025年特色产业总产值历史性突破亿元大关。整合资金1154.8万元实施产业类项目6个，通过土地流转、入股分红、产业务工等方式拓宽群众增收渠道。2025年农村劳动力转移就业12694人，转移就业率达81.42%，易地扶贫搬迁群众劳动力转移就业率达93.2%。
-
-【兜底保障，应兜尽兜】
-精准落实各项政策，2025年发放城镇低保55.17万元（69户81人）、农村低保1103.85万元（998户2558人），特困供养174.93万元，临时救助15.7万元（67人）。医疗保险参保率保持在99%以上，养老保险征缴率达98.12%，民生福祉答卷写满温暖。
-    `
-  },
-  '主题党日': {
-    title: '学思想 强党性——保和镇各党支部开展主题党日活动',
-    content: `[DATE_PLACEHOLDER]（当天日期），为深入学习贯彻习近平新时代中国特色社会主义思想，推动党纪学习教育走深走实，近日，保和镇各党支部围绕"学思想、强党性"主题，积极开展形式多样的主题党日活动。
-
-【深学细悟，筑牢思想根基】
-各党支部组织党员集中学习必读篇目，深入学习党的二十大精神及习近平总书记关于党的建设、乡村振兴、基层治理等重要论述。学习结束后，党员们结合自身工作实际，畅谈学习体会和思想感悟，纷纷表示要将学习成果转化为推动工作的实际行动。
-
-【以案为鉴，严守纪律底线】
-结合党纪学习教育，各党支部组织党员集中观看警示教育片，以案说法、以案明纪。通过学习违纪违法典型案例，引导党员知敬畏、存戒惧、守底线，始终保持共产党员的先进性和纯洁性。
-
-【志愿服务，践行初心使命】
-各党支部将主题党日与社会实践相结合，组织党员开展志愿服务活动。有的党支部深入困难群众家中走访慰问，有的党支部参加环境卫生整治，用实际行动践行共产党员的初心使命。`
-  },
-  '政绩观': {
-    title: '学以增智 学以致用——保和镇开展树立践行正确政绩观专题培训工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），为深入学习贯彻党的二十大精神，进一步推动全镇党员干部树牢和践行正确政绩观，不断提升履职能力和政治素养，3月XX日，保和镇举办"树立和践行正确政绩观"专题党课培训。
-
-【领导重视，认真筹划】
-镇党委认真对待此次培训工作，提前谋划、精心部署，确保培训取得实效。培训邀请专家教授进行专题授课，帮助全镇干部职工深刻理解正确政绩观的核心要义与实践要求。
-
-【学深悟透，把握要义】
-培训重点围绕"为谁创造业绩、创造什么业绩、怎样创造业绩"这一根本问题，从理论渊源、时代要求、实践路径等多个维度进行系统阐释。授课既有政治高度和思想深度，又紧密结合基层实际，案例鲜活，为全镇党员干部深刻理解正确政绩观提供了清晰的指引。
-
-【学以致用，扎实工作】
-全镇干部职工以此次专题培训为契机，认真消化吸收培训内容，真正内化于心、外化于行。要始终坚持人民至上，把为民造福作为最重要的政绩；坚持实事求是，尊重客观规律，立足本职，埋头苦干；以"功成不必在我、功成必定有我"的境界和担当，扎扎实实做好各项工作。
-    `
-  },
-  '党建': {
-    title: '迎难而上 实干笃行——保和镇开展基层党建工作',
-    content: `[DATE_PLACEHOLDER]（当天日期），为全面落实新时代党的建设总要求，压紧压实基层党建工作责任，近日，保和镇召开2026年基层党建工作推进会。镇全体班子成员、各村（社区）党支部书记、镇属各部门负责人参加会议。
-
-【回顾成绩，坚定信心】
-会议指出，过去一年，全镇各级党组织深入学习贯彻党的二十大和二十届历次全会精神，围绕中心、服务大局，在组织建设、队伍建设、制度建设等方面取得明显成效。22个离退休干部党支部覆盖832名党员，"镇统筹、社区管"工作模式不断推进，老干部"离岗不离党、退休不褪色"的本色充分彰显，党的建设在开拓创新中全面加强。
-
-【正视问题，补齐短板】
-会议强调，对照上级要求和群众期盼，全镇基层党建工作仍存在一些短板弱项，主要表现在：部分党支部标准化规范化建设还有差距，党员教育管理不够严格，党建引领基层治理的实效还需进一步提升。
-
-【明确目标，狠抓落实】
-会议要求，2026年全镇基层党建工作要聚焦"五个提升"精准发力：提升政治引领力，提升组织凝聚力，提升发展推动力，提升服务战斗力，提升制度执行力，确保全年党建工作任务见到成果，以优异成绩把工作做好。
-    `
-  }
-};
-// ========== 保和镇真实信息 ==========
-const BAOHE_INFO = {
-  name: '保和镇',
-  fullName: '维西傈僳族自治县保和镇',
-  location: '迪庆藏族自治州维西傈僳族自治县县城',
-  area: '368平方公里',
-  villages: '9个村（社区）',
-  population: '常住人口4.2万余人，流动人口近万人',
-  cadres: '1477名离退休干部，党员1022名',
-  partyBranches: '22个离退休干部党支部，覆盖党员832名',
-  gridCount: '108个网格',
-  forestCover: '74%以上',
-  collectiveIncome: '126.82万元（2025年）',
-  specialIndustries: '中药材21947.5亩、冰葡萄1625.44亩、蔬菜6611亩',
-  emergencyTeam: '9支义务扑火队440人',
-  keyLeaders: '镇长：钱龙',
-  features: ['省级绿美乡镇', '全州民族团结进步模范集体', '省级优秀党务工作者夏增琴']
-};
-
-// init called at end
-</script>
-<script>// ==================== 状态 ====================
-let selectedTemplate = null;
-let photos = [];
-let selectedTags = [];
-let generatedHTML = '';
-
-// ==================== 初始化 ====================
-function init() {
-  renderTemplates();
-  renderTags();
-  renderHistory();
-  document.getElementById('f-date').value = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});
-  // 默认编辑审核人员
-  if (!document.getElementById('f-editor').value) document.getElementById('f-editor').value = '赵倩颖';
-  if (!document.getElementById('f-review1').value) document.getElementById('f-review1').value = '唐艺轩';
-  if (!document.getElementById('f-review2').value) document.getElementById('f-review2').value = '祁建鑫';
-  if (!document.getElementById('f-final').value) document.getElementById('f-final').value='扎西巴丹';
-}
-
-// ==================== 模板渲染 ====================
-function renderTemplates() {
-  const grid = document.getElementById('template-grid');
-  if (!grid) return;
-  grid.innerHTML = TEMPLATES.map(t =>
-    `<div class="template-item" onclick="selectTemplate('${t.id}')" id="tpl-${t.id}">
-      <div class="emoji">${t.emoji}</div>
-      <div class="name">${t.name}</div>
-      <div class="desc">${t.desc}</div>
-    </div>`
-  ).join('');
-}
-
-function renderTags() {
-  const row = document.getElementById('tag-row');
-  if (!row) return;
-  row.innerHTML = ALL_TAGS.map(t =>
-    `<span class="tag-chip" onclick="toggleTag(this,'${t}')">${t}</span>`
-  ).join('');
-}
-
-function toggleTag(el, tag) {
-  el.classList.toggle('sel');
-  if (el.classList.contains('sel')) {
-    if (!selectedTags.includes(tag)) selectedTags.push(tag);
-  } else {
-    selectedTags = selectedTags.filter(x => x !== tag);
-  }
-}
-
-function selectTemplate(id) {
-  selectedTemplate = id;
-  document.querySelectorAll('.template-item').forEach(e => e.classList.remove('selected'));
-  const el = document.getElementById('tpl-' + id);
-  if (el) el.classList.add('selected');
-}
-
-
-// ==================== 实时预览函数 ====================
-function showLivePreview() {
-  const ta = document.getElementById('f-content');
-  const live = document.getElementById('live-preview');
-  if (!ta || !live) return;
-  const val = ta.value.trim();
-  if (!val) { live.style.display = 'none'; return; }
-  live.style.display = 'block';
-  // 简单渲染段落和小标题
-  let html = val.split('\n').filter(l => l.trim()).map(l => {
-    const t = l.trim();
-    if (t.startsWith('【') && t.includes('】') && t.indexOf('】') < 20) {
-      return `<div style="font-weight:bold;color:#c41230;margin:6px 0 2px;font-size:13px;">${escapeHtml(t)}</div>`;
-    }
-    if (t.startsWith('【注】') || t.startsWith('[注]')) {
-      return `<div style="color:#888;font-size:12px;border-left:3px solid #c41230;padding-left:8px;margin:4px 0;">${escapeHtml(t)}</div>`;
-    }
-    return `<div style="text-indent:2em;margin-bottom:4px;line-height:1.7;">${escapeHtml(t)}</div>`;
-  }).join('');
-  live.innerHTML = `<div style="font-size:11px;color:#aaa;margin-bottom:6px;border-bottom:1px dashed #eee;padding-bottom:4px;">📖 实时预览（生成前）</div>` + html;
-}
-
-
-
-function getExpanderByTheme(theme) {
-  for (const [key, expander] of Object.entries(CONTENT_EXPANDERS)) {
-    if (theme.includes(key) || key.includes(theme)) {
-      return expander;
-    }
-  }
-  return function(today) { return CONTENT_EXPANDERS['默认'](today, theme); };
-}
-
-// ==================== AI生成全文 ====================
-function humanizeText(text) {
-  // 规则1：替换模糊数字为更真实的小数字
-  const numReplacements = [
-    [/(\d+)余次/g, {'1':'8','2':'15','3':'23','4':'36','5':'48','6':'52'}],
-    [/(\d+)余起/g, {'1':'7','2':'12','3':'18','4':'25','5':'32'}],
-    [/(\d+)余户/g, {'1':'8','2':'13','3':'27','4':'35','5':'46'}],
-    [/(\d+)余公里/g, {'1':'6','2':'12','3':'18','4':'25'}],
-    [/(\d+)余条/g, {'1':'6','2':'13','3':'19'}],
-    [/(\d+)余亩/g, {'1':'5','2':'11','3':'18'}],
-    [/(\d+)余人次/g, {'1':'8','2':'15','3':'26'}],
-  ];
-  numReplacements.forEach(([re, map]) => {
-    text = text.replace(re, (m, n) => (map[n] || n) + m.slice(n.length));
-  });
-
-  // 规则2：消除AI套话
-  const badGood = [
-    ['以更加饱满的热情', '干部群众齐心协力'],
-    ['以更加务实的作风', '扑下身子扎实干'],
-    ['以更加有力的举措', '一项一项抓落实'],
-    ['真抓实干', '埋头苦干'],
-    ['踔厉奋发', '迎难而上'],
-    ['砥砺前行', '稳步推进'],
-    ['担当作为', '扎实工作'],
-    ['卓有成效', '取得实效'],
-    ['有力有效', '取得进展'],
-    ['落地见效', '见到成果'],
-    ['扎实推进', '稳步推进'],
-    ['精心组织', '认真筹划'],
-    ['周密部署', '统筹安排'],
-    ['高度重视', '认真对待'],
-    ['持续深化', '不断推进'],
-    ['深度融合', '协同发展'],
-    ['全面提升', '有所提高'],
-    ['显著增强', '有所增强'],
-    ['守正创新', '开拓创新'],
-    ['再上新台阶', '取得新进步'],
-    ['向党和人民交上满意答卷', '把工作做好'],
-    ['圆满完成', '顺利完成'],
-    ['统筹推进', '协调推进'],
-    ['标本兼治', '综合治理'],
-    ['凝心聚力', '齐心协力'],
-    ['攻坚克难', '克服困难'],
-  ];
-  badGood.forEach(([bad, good]) => { text = text.split(bad).join(good); });
-
-  // 规则3：消除机械排比
-  text = text.replace(/各[^，,；;。.]*[，,][各][^，,；;。.]*[，,][各][^，,；;。.]*形成工作合力。/g,
-    '各相关部门协调配合，形成工作合力。');
-
-  // 规则4：加入真实感官描述（随机插一句）
-  const sensory = [
-    '走进保和镇，随处可见党员干部忙碌的身影。',
-    '连日来，保和镇各项工作有序推进，呈现出热火朝天的干事创业景象。',
-    '连日来，镇村两级干部走村入户，用心用情解决群众急难愁盼问题。',
-    '村民们说，这几年村里的变化看得见、摸得着。',
-    '在保和镇的田间地头、项目工地，干部群众正抢抓时间节点推进各项工作。',
-  ];
-  const paras = text.split('\n').filter(l => l.trim());
-  if (paras.length >= 2) {
-    const desc = sensory[Math.floor(Math.random() * sensory.length)];
-    paras.splice(1, 0, desc);
-    text = paras.join('\n');
-  }
-
-  return text;
-}
-
-// ==================== AI扩展段落库（按主题扩充字数）====================
-const CONTENT_EXPANDERS = {
-  '森林防火': (today) => [
-    '当前，全镇已进入森林防火高危期。据气象部门预测，未来一段时间内全镇气温偏高、降水偏少，森林火险等级持续处于高度危险状态，防火形势不容乐观。',
-    '在宣传教育方面，保和镇充分利用广播村村响、微信公众号、入户宣传等方式，将森林防火知识送到千家万户，引导群众自觉遵守防火规定，营造全民参与、共同防火的良好社会氛围。'
-  ],
-  '矛盾纠纷': (today) => [
-    '维护社会和谐稳定是基层治理的重要内容。保和镇坚持"矛盾不上交、平安不出事、服务不缺位"的工作理念，推动基层治理体系和治理能力现代化，不断增强人民群众的获得感、幸福感、安全感。',
-    '下一步，保和镇将进一步整合调解资源，加强人民调解员业务培训，提升调解工作规范化水平，推动矛盾纠纷多元化解工作取得新进步，为维护社会和谐稳定作出新的更大贡献。'
-  ],
-  '老干部': (today) => [
-    '老干部是党和国家的宝贵财富，保和镇始终把老干部工作摆在重要位置，用心用情做好服务保障工作，让老干部在政治上有荣誉感、组织上有归属感、生活上有幸福感。',
-    '下一步，镇党委将继续加强与老干部的沟通联系，及时了解老干部的思想动态和生活需求，用足用好各项政策，让老干部共享改革发展成果。'
-  ],
-  '安全生产': (today) => [
-    '安全生产责任重于泰山。保和镇始终绷紧安全生产这根弦，坚持综合治理、综合治理，切实把安全生产工作抓紧抓实。',
-    '各村（社区）、各生产经营单位要切实履行安全生产主体责任，开展隐患自查自改，做到防患于未然，共同维护全镇安全生产良好形势。'
-  ],
-  '春耕': (today) => [
-    '眼下正值春耕生产的大好时节，保和镇早安排、早部署、早行动，多措并举抓实春耕备耕各项工作，确保全年农业生产开好局。',
-    '镇农业综合服务中心还组织农技人员深入田间地头，开展农技培训和现场指导，帮助农户解决春耕生产中遇到的技术难题，确保春耕生产顺利推进。'
-  ],
-  '医保': (today) => [
-    '医保缴费工作关系千家万户的切身利益，是一项重要的民生工程、民心工程。保和镇坚持"全覆盖、保基本、多层次、可持续"的方针，不断推进医疗保障制度改革，不断提升医保经办服务质量。',
-    '各村（社区）要继续加大政策宣传力度，引导群众积极参保、主动缴费，确保医保基金应收尽收、应保尽保，让医保政策红利更多更好地惠及全镇群众。'
-  ],
-  '文明': (today) => [
-    '精神文明建设是乡村振兴的重要内容，也是提升城乡文明程度的关键抓手。保和镇以培育和践行社会主义核心价值观为引领，不断推进群众性精神文明创建活动，不断提升群众文明素养。',
-    '各村（社区）要充分发挥"一约四会"作用，引导群众破除陈规陋习、树立文明新风，推动形成文明乡风、良好家风、淳朴民风，让文明之花在保和大地绽放得更加绚烂。'
-  ],
-  '巩固脱贫': (today) => [
-    '巩固拓展脱贫攻坚成果是全面推进乡村振兴的基础和前提。保和镇严格落实"四个不摘"要求，保持现有帮扶政策总体稳定，坚决守住不发生规模性返贫的底线，确保脱贫成果持续巩固。',
-    '镇村两级干部将继续深入走访监测对象，逐户分析风险原因，"一户一策"制定帮扶计划，确保帮扶措施精准有效，让每一位困难群众都感受到党和政府的温暖与关怀。'
-  ],
-  '党建': (today) => [
-    '党的建设是一切工作的统领。保和镇坚持以政治建设为统领，全面推进党的思想建设、组织建设、作风建设、纪律建设，把制度建设贯穿其中，不断提高党建工作水平。',
-    '各党支部要严格落实"三会一课"、主题党日、组织生活会等基本制度，创新党员教育管理方式方法，增强党支部的凝聚力、战斗力、号召力，充分发挥战斗堡垒作用。'
-  ],
-  '主题党日': (today) => [
-    '开展主题党日活动是加强党员教育管理、严肃党内政治生活的重要举措。保和镇各党支部结合实际，精心设计活动内容，创新活动形式，不断增强主题党日活动的吸引力和实效性。',
-    '下一步，各党支部将进一步丰富主题党日内涵，推动党建与业务协同发展，引导党员在服务中心大局中亮身份、作表率、展风采，以实际行动践行为民宗旨。'
-  ],
-  '人居环境': (today) => [
-    '改善农村人居环境是实施乡村振兴战略的第一场硬仗。保和镇以"绿美行动"为抓手，深入推进农村厕所革命、生活垃圾治理、生活污水治理，不断刷新乡村"颜值"，擦亮乡村振兴底色。',
-    '各村（社区）要健全长效管护机制，发挥村民主体作用，推行"门前三包"和积分制管理，激发群众参与人居环境整治的内生动力，共同建设美丽宜居乡村。'
-  ],
-  '默认': (today, theme) => [
-    `为深入贯彻落实党的二十大精神及省州县相关工作部署，稳步推进${theme}各项工作见到成果，连日来，保和镇认真对待、认真筹划、多措并举，确保各项任务有序推进。`,
-    '下一步，保和镇将继续对标对表、查漏补缺，以更加坚定的信心、更加有力的举措、更加务实的作风，推动全年各项目标任务顺利完成，把工作做好交上一份满意的答卷。'
-  ]
-};
-
-(theme) {
-  for (const [key, expander] of Object.entries(CONTENT_EXPANDERS)) {
-    if (theme.includes(key) || key.includes(theme)) {
-      return expander;
-    }
-  }
-  return function(today) { return CONTENT_EXPANDERS['默认'](today, theme); };
-}
-
-function aiGenerate() { alert("aiGenerate函数被调用!");
-  // 调试：验证函数被调用
-  console.log('aiGenerate 被调用');
-  alert('开始生成...');
-  
-  const theme = document.getElementById('ai-theme').value.trim();
-  if (!theme) { toast('请输入文章主题！'); return; }
-
-  // 显示加载
-  const btn = document.querySelector('button.btn-ai[onclick="console.log('按钮被点击!'); aiGenerate();"]');
-  const origText = btn.textContent;
-  btn.textContent = '🤖 AI写作中…';
-  btn.disabled = true;
-
-  try {
-    // 1. 选标题（从标题库随机）
-    const mainTitle = getTitleByTheme(theme);
-    const today = getTodayDate();
-
-    // 2. 匹配本地内容库
-    let result = null;
-    for (const [key, val] of Object.entries(AI_DB)) {
-      if (theme.includes(key) || key.includes(theme) ||
-          (key.length > 2 && (theme.includes(key.substring(0, 2)) || key.substring(0, 2).includes(theme.substring(0, 2))))) {
-        if (!result || key.length > (result._key || '').length) {
-          result = val;
-          result._key = key;
-        }
-      }
-    }
-
-    // 3. 组装内容
-    let content;
-    if (result) {
-      content = result.content;
-    } else {
-      // 通用框架
-      content = `连日来，保和镇各相关部门按照镇党委统一部署，扎实推进${theme}各项工作，掀起新一轮工作热潮。
-
-【统筹协调，压实责任】
-镇属各部门、各村（社区）对照目标任务，主动认领工作职责，细化任务分工，做到每项工作有人盯、有人抓、有人管。
-
-【扎实推进，务求实效】
-坚持问题导向和结果导向相结合，深入一线了解实情，找准工作着力点，确保各项措施落到实处、见到实效。
-
-【建章立制，形成长效】
-在推进工作的同时，注重总结经验做法，建立健全相关工作制度，推动各项工作常态化、长效化开展。`;
-    }
-
-    // 4. 替换日期占位符为当天真实日期
-    content = content.replace('[DATE_PLACEHOLDER]', today);
-
-    // 如果原模板第一句是"保和镇xxx"，前面加上日期引导句
-    if (!content.startsWith(today)) {
-      content = content.replace(
-        /^(.{2,10}镇.{2,30}。)/,
-        `${today}，$1`
-      );
-    }
-
-    // 5. 用扩展库补充字数（如果正文太短）
-    const wordCount = content.replace(/\s/g, '').length;
-    if (wordCount < 600) {
-      const expander = getExpanderByTheme(theme);
-      const additions = expander(today);
-      // 在倒数第二段之后插入扩展段落
-      const lastBracket = content.lastIndexOf('】');
-      if (lastBracket !== -1) {
-        const insertPos = content.indexOf('\n', lastBracket);
-        if (insertPos !== -1) {
-          content = content.slice(0, insertPos) + '\n' + additions[0] + '\n' + additions[1] + content.slice(insertPos);
-        }
-      }
-    }
-
-    // 6. 去AI味处理
-    content = humanizeText(content);
-
-    const fullTitle = `${mainTitle}——保和镇开展${theme}工作`;
-    document.getElementById('f-title').value = fullTitle;
-    document.getElementById('f-content').value = content;
-    showLivePreview();
-    toast('✅ AI已生成全文，请检查并修改！');
-    document.getElementById('f-content').scrollIntoView({ behavior: 'smooth' });
-
-  } catch (e) {
-    toast('⚠️ 生成时出错：' + e.message);
-  } finally {
-    btn.textContent = origText;
-    btn.disabled = false;
-  }
-}
-
-function aiRewrite() {
-  const content = document.getElementById('f-content').value.trim();
-  if (!content) { toast('请先输入内容！'); return; }
-  const lines = content.split('\n').filter(l => l.trim());
-  const additions = [
-    '，为推动保和镇高质量发展作出积极贡献。',
-    '，以实际行动践行为民宗旨。',
-    '，不断提升群众的获得感、幸福感、安全感。',
-    '，确保各项工作见到成果。',
-  ];
-  let counter = 0;
-  let enhanced = lines.map(l => {
-    if (l.startsWith('【') || !l.trim() || l.length < 10) return l;
-    if (counter < additions.length && Math.random() > 0.5) {
-      counter++;
-      return l.trimEnd() + additions[counter - 1];
-    }
-    return l;
-  }).join('\n');
-  // 去AI味
-  enhanced = humanizeText(enhanced);
-  document.getElementById('f-content').value = enhanced;
-  showLivePreview();
-  toast('✨ 润色完成！');
-}
-
-// ==================== 配图 ====================
-function handlePhotoUpload(input) {
-  const files = Array.from(input.files);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      photos.push({ src: e.target.result, caption: '' });
-      renderPhotos();
-    };
-    reader.readAsDataURL(file);
-  });
-  input.value = '';
-}
-
-function renderPhotos() {
-  const grid = document.getElementById('photo-grid');
-  if (!grid) return;
-  const addBtn = `<div class="photo-item" id="photo-add-btn">
-    <div class="photo-add">➕<span>添加配图</span></div>
-    <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotoUpload(this)" />
-  </div>`;
-  grid.innerHTML = photos.map((p, i) =>
-    `<div class="photo-item" style="border-style:solid;">
-      <img src="${p.src}" />
-      <div class="photo-del" onclick="delPhoto(${i})">✕</div>
-    </div>`
-  ).join('') + addBtn;
-  const capArea = document.getElementById('photo-caption-area');
-  if (capArea) capArea.style.display = photos.length > 0 ? 'block' : 'none';
-}
-
-function delPhoto(i) {
-  photos.splice(i, 1);
-  renderPhotos();
-}
-
-// ==================== 生成 ====================
-function escapeHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function buildBodyHTML(content) {
-  const paras = content.split('\n').filter(p => p.trim());
-  let html = '';
-  let photoIndex = 0;
-  let paraCount = 0;
-  paras.forEach((p) => {
-    const t = p.trim();
-    if (!t) return;
-    // 引用注释
-    if (t.startsWith('【注】') || t.startsWith('[注]')) {
-      html += `<blockquote style="background:#f9f9f9;border-left:4px solid #c41230;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;color:#555;font-size:14px;">${escapeHtml(t)}</blockquote>`;
-      return;
-    }
-    // 章节标题（单独一行的小标题）
-    if (t.startsWith('【') && t.includes('】') && t.indexOf('】') < 20) {
-      const match = t.match(/^【([^】]+)】(.+)/);
-      if (match) {
-        html += `<h3 style="font-size:16px;color:#222;margin:20px 0 12px;padding-left:10px;border-left:4px solid #c41230;">${escapeHtml(match[1])}${escapeHtml(match[2])}</h3>`;
-        return;
-      }
-    }
-    // 普通正文段落
-    paraCount++;
-    html += `<p style="text-indent:2em;margin-bottom:14px;line-height:1.8;color:#333;font-size:15px;">${escapeHtml(t)}</p>`;
-    // 每2个完整段落结束后插入一张图片（图片不夹在段落中间）
-    if (photos.length > 0 && photoIndex < photos.length && paraCount % 2 === 0) {
-      const cap = photos[photoIndex].caption || '';
-      html += `<div style="text-align:center;margin:16px 0;"><img src="${photos[photoIndex].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" />${cap ? `<p style="text-align:center;color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</p>` : ''}</div>`;
-      photoIndex++;
-    }
-  });
-  // 剩余图片全部放文末
-  while (photoIndex < photos.length) {
-    const cap = photos[photoIndex].caption || '';
-    html += `<div style="text-align:center;margin:16px 0;"><img src="${photos[photoIndex].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" />${cap ? `<p style="text-align:center;color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</p>` : ''}</div>`;
-    photoIndex++;
-  }
-  return html;
 }
 
 function generate() {
-  const title = document.getElementById('f-title').value.trim();
-  const content = document.getElementById('f-content').value.trim();
-  if (!title && !content) { toast('请输入标题或正文！'); return; }
-  const date = document.getElementById('f-date').value.trim() || new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});
-  const useHeader = document.getElementById('opt-header')?.checked !== false;
-  const useFooter = document.getElementById('opt-footer')?.checked !== false;
-  const editor = document.getElementById('f-editor')?.value?.trim() || '赵倩颖';
-  const review1 = document.getElementById('f-review1')?.value?.trim() || '唐艺轩';
-  const review2 = document.getElementById('f-review2')?.value?.trim() || '祁建鑫';
-  const final = document.getElementById('f-final')?.value?.trim() || '扎西巴丹';
-
-  let html = '';
-  if (useHeader) {
-    html += `<img src="cover.jpg" style="width:100%;max-width:677px;display:block;margin:0 auto 16px;border-radius:8px;" />`;
-  }
-  html += `<h1 style="font-size:20px;font-weight:bold;color:#222;line-height:1.5;margin-bottom:8px;">${escapeHtml(title || '文章标题')}</h1>`;
-  html += `<div style="font-size:12px;color:#999;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee;">${escapeHtml(date)}　|　来源：维西傈僳族自治县保和镇人民政府</div>`;
-  if (selectedTags.length > 0) {
-    html += `<div style="margin-bottom:12px;">${selectedTags.map(t => `<span style="display:inline-block;background:#f0f0f0;color:#666;padding:2px 10px;border-radius:12px;font-size:12px;margin-right:6px;margin-bottom:4px;">${escapeHtml(t)}</span>`).join('')}</div>`;
-  }
-  html += buildBodyHTML(content);
-  if (useFooter) {
-    html += `<div style="margin-top:28px;padding-top:16px;border-top:2px solid #c41230;">
-  <div style="text-align:center;margin-bottom:12px;">
-    <div style="font-size:14px;color:#c41230;font-weight:bold;">— The End —</div>
-  </div>
-  <div style="background:#f5f5f5;padding:14px 16px;border-radius:8px;font-size:12px;color:#666;line-height:2;">
-    <div style="margin-bottom:6px;"><strong>【供稿】</strong>保和镇党政办</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">📝 编辑：${escapeHtml(editor)}</span>
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">🔍 一审：${escapeHtml(review1)}</span>
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">🔍 二审：${escapeHtml(review2)}</span>
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">✅ 终审：${escapeHtml(final)} 钱龙</span>
-    </div>
-    <div style="margin-top:10px;font-size:11px;color:#999;border-top:1px solid #e0e0e0;padding-top:8px;text-align:center;">
-      本公众号由保和镇人民政府主办 · 旨在传播权威政策、传递民生资讯、弘扬文明新风
-    </div>
-  </div>
-</div>`;
-  }
-  const finalHTML = `<div style="max-width:677px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;padding:16px 15px;color:#333;">
-${html}
-</div>`;
-  generatedHTML = finalHTML;
-
-  // 预览
-  const prev = document.getElementById('preview-content');
-  if (!prev) { toast('预览区域加载中，请稍后重试'); return; }
-  let preview = '';
-  if (useHeader) {
-    preview += `<img src="cover.jpg" style="width:100%;display:block;margin-bottom:16px;border-radius:8px;" />`;
-  }
-  preview += `<div style="font-size:20px;font-weight:bold;color:#222;line-height:1.5;margin-bottom:8px;">${escapeHtml(title || '文章标题')}</div>`;
-  preview += `<div style="font-size:12px;color:#999;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee;">${escapeHtml(date)}　|　来源：维西傈僳族自治县保和镇人民政府</div>`;
-  if (selectedTags.length > 0) {
-    preview += `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;">${selectedTags.map(t => `<span style="background:#f0f0f0;color:#666;padding:2px 8px;border-radius:10px;font-size:11px;">${escapeHtml(t)}</span>`).join('')}</div>`;
-  }
-  const paras = content.split('\n').filter(p => p.trim());
-  let photoIdx = 0;
-  let paraCount = 0;
-  paras.forEach((p) => {
-    const t = p.trim();
-    if (!t) return;
-    if (t.startsWith('【注】') || t.startsWith('[注]')) { preview += `<blockquote style="background:#f9f9f9;border-left:4px solid #c41230;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;color:#555;font-size:14px;">${escapeHtml(t)}</blockquote>`; return; }
-    if (t.startsWith('【') && t.includes('】') && t.indexOf('】') < 20) {
-      const m = t.match(/^【([^】]+)】(.+)/);
-      if (m) { preview += `<h3 style="font-size:16px;color:#222;margin:18px 0 10px;padding-left:10px;border-left:4px solid #c41230;">${escapeHtml(m[1])}${escapeHtml(m[2])}</h3>`; return; }
-    }
-    paraCount++;
-    preview += `<p style="text-indent:2em;margin-bottom:14px;line-height:1.8;">${escapeHtml(t)}</p>`;
-    if (photos.length > 0 && photoIdx < photos.length && paraCount % 2 === 0) {
-      const cap = photos[photoIdx].caption || '';
-      preview += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIdx].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" /><div style="color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</div></div>`;
-      photoIdx++;
-    }
-  });
-  while (photoIdx < photos.length) {
-    const cap = photos[photoIdx].caption || '';
-    preview += `<div style="text-align:center;margin:14px 0;"><img src="${photos[photoIdx].src}" style="max-width:100%;border-radius:6px;display:block;margin:0 auto;" /><div style="color:#999;font-size:12px;margin-top:6px;">${escapeHtml(cap)}</div></div>`;
-    photoIdx++;
-  }
-  if (useFooter) {
-    preview += `<div style="margin-top:20px;text-align:center;"><img src="end-photo1.jpg" style="max-width:100%;border-radius:8px;margin-bottom:8px;" /><img src="end-photo2.jpg" style="max-width:100%;border-radius:8px;" /></div>`;
-  preview += `<div style="margin-top:28px;padding-top:16px;border-top:2px solid #c41230;">
-  <div style="text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:#c41230;font-weight:bold;">— The End —</div></div>
-  <div style="background:#f5f5f5;padding:14px 16px;border-radius:8px;font-size:12px;color:#666;line-height:2;">
-    <div style="margin-bottom:6px;"><strong>【供稿】</strong>保和镇党政办</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;">
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">📝 编辑：${escapeHtml(editor)}</span>
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">🔍 一审：${escapeHtml(review1)}</span>
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">🔍 二审：${escapeHtml(review2)}</span>
-      <span style="background:#fff;padding:4px 10px;border-radius:4px;border:1px solid #e0e0e0;">✅ 终审：${escapeHtml(final)} 钱龙</span>
-    </div>
-    <div style="margin-top:10px;font-size:11px;color:#999;border-top:1px solid #e0e0e0;padding-top:8px;text-align:center;">
-      本公众号由保和镇人民政府主办 · 旨在传播权威政策、传递民生资讯、弘扬文明新风
-    </div>
-  </div>
-</div>`;
-  }
-  prev.innerHTML = preview;
-  document.getElementById('preview-area').style.display = 'block';
-  document.getElementById('html-code').textContent = finalHTML;
-  document.getElementById('code-area').style.display = 'block';
-  saveHistory({ title: title || '未命名', date, content, tags: [...selectedTags], photos: photos.map(p => p.src), editor, review1, review2, final });
-  document.getElementById('preview-area').scrollIntoView({ behavior: 'smooth' });
-  toast('✅ 生成完成！');
+var theme = document.getElementById("theme").value.trim();
+if(!theme) {
+alert("请输入主题");
+return;
 }
 
-function copyCode() {
-  if (!generatedHTML) generate();
-  navigator.clipboard.writeText(generatedHTML).then(() => toast('✅ 已复制！打开公众号后台 → 粘贴 → 预览 → 发布！')).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = generatedHTML;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    toast('✅ 已复制！');
-  });
+var today = getToday();
+var prefix = titlePrefixes[Math.floor(Math.random() * titlePrefixes.length)];
+var title = prefix + "——保和镇开展" + theme + "工作";
+
+var content = "";
+for(var key in templates) {
+if(theme.indexOf(key) !== -1 || key.indexOf(theme) !== -1 || theme.indexOf(key.substring(0,2)) !== -1) {
+content = templates[key];
+break;
+}
 }
 
-function clearAll() {
-  if (!confirm('确定清空所有内容？')) return;
-  ['f-title','f-content','f-editor','f-review1','f-review2','f-final'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  photos = []; selectedTags = []; selectedTemplate = null; generatedHTML = '';
-  document.querySelectorAll('.tag-chip').forEach(e => e.classList.remove('sel'));
-  document.querySelectorAll('.template-item').forEach(e => e.classList.remove('selected'));
-  document.getElementById('preview-area').style.display = 'none';
-  document.getElementById('code-area').style.display = 'none';
-  renderPhotos();
-  toast('已清空');
+if(!content) {
+content = "{date}，保和镇召开" + theme + "工作推进会，传达学习上级有关会议精神，对全镇" + theme + "工作进行安排部署。镇全体班子成员、各村（社区）书记参加会议。\n\n【高度重视，精心部署】\n镇党委政府高度重视" + theme + "工作，召开专题会议研究部署，明确目标任务和工作责任，确保各项工作有序推进。\n\n【细化措施，狠抓落实】\n各村（社区）、镇属各部门对照目标任务，制定具体措施，明确时间节点，做到每项工作有人抓、有人管。\n\n【强化督查，确保实效】\n镇纪委定期开展督查检查，对工作推进不力的严肃追责问责，确保" + theme + "各项工作取得实效。";
 }
 
-function saveHistory(item) {
-  let list = JSON.parse(localStorage.getItem('wx_history') || '[]');
-  list.unshift({ ...item, id: Date.now() });
-  list = list.slice(0, 10);
-  localStorage.setItem('wx_history', JSON.stringify(list));
-  renderHistory();
+content = content.replace("{date}", today);
+
+document.getElementById("title").value = title;
+document.getElementById("content").value = content;
+updateCount();
 }
 
-function renderHistory() {
-  const el = document.getElementById('history-list');
-  if (!el) return;
-  const list = JSON.parse(localStorage.getItem('wx_history') || '[]');
-  if (list.length === 0) { el.innerHTML = '<div style="color:#999;font-size:13px;text-align:center;padding:16px;">暂无草稿</div>'; return; }
-  el.innerHTML = list.map(h =>
-    `<div class="history-item" onclick="loadHistory(${h.id})">
-      <div class="info">
-        <h4>${escapeHtml(h.title)}</h4>
-        <span>${escapeHtml(h.date || '')}　${(h.content||'').length}字</span>
-      </div>
-      <button class="del-btn" onclick="event.stopPropagation();delHistory(${h.id})">✕</button>
-    </div>`
-  ).join('');
+function updateCount() {
+var text = document.getElementById("content").value;
+document.getElementById("count").textContent = text.length;
 }
 
-function loadHistory(id) {
-  const list = JSON.parse(localStorage.getItem('wx_history') || '[]');
-  const h = list.find(x => x.id === id);
-  if (!h) return;
-  document.getElementById('f-title').value = h.title || '';
-  document.getElementById('f-date').value = h.date || '';
-  document.getElementById('f-content').value = h.content || '';
-  if (h.editor) { const el = document.getElementById('f-editor'); if (el) el.value = h.editor; }
-  if (h.review1) { const el = document.getElementById('f-review1'); if (el) el.value = h.review1; }
-  if (h.review2) { const el = document.getElementById('f-review2'); if (el) el.value = h.review2; }
-  if (h.final) { const el = document.getElementById('f-final'); if (el) el.value = h.final; }
-  if (h.tags) {
-    selectedTags = h.tags;
-    document.querySelectorAll('.tag-chip').forEach(el => el.classList.toggle('sel', h.tags.includes(el.textContent.trim())));
-  }
-  if (h.photos && h.photos.length > 0) { photos = h.photos.map(src => ({ src, caption: '' })); renderPhotos(); }
-  toast('已加载草稿');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function handlePhotos() {
+var files = document.getElementById("photos").files;
+photos = [];
+for(var i = 0; i < files.length; i++) {
+var reader = new FileReader();
+reader.onload = function(e) {
+photos.push(e.target.result);
+};
+reader.readAsDataURL(files[i]);
+}
+document.getElementById("photo-info").textContent = "已选择 " + files.length + " 张图片";
 }
 
-function delHistory(id) {
-  let list = JSON.parse(localStorage.getItem('wx_history') || '[]');
-  list = list.filter(x => x.id !== id);
-  localStorage.setItem('wx_history', JSON.stringify(list));
-  renderHistory();
+function showPreview() {
+var title = document.getElementById("title").value;
+var content = document.getElementById("content").value;
+var editor = document.getElementById("editor").value || "赵倩颖";
+var review1 = document.getElementById("review1").value || "唐艺轩";
+var review2 = document.getElementById("review2").value || "祁建鑫";
+var final = document.getElementById("final").value || "扎西巴丹";
+
+var html = "";
+html += '<img src="cover.jpg" style="max-width:100%;margin-bottom:16px">';
+html += '<h1>' + escapeHtml(title) + '</h1>';
+html += '<div style="font-size:12px;color:#999;margin-bottom:12px">' + getToday() + ' | 来源：维西傈僳族自治县保和镇人民政府</div>';
+
+var paras = content.split("\n");
+var photoIndex = 0;
+var paraCount = 0;
+
+for(var i = 0; i < paras.length; i++) {
+var p = paras[i].trim();
+if(!p) continue;
+
+if(p.indexOf("【") === 0 && p.indexOf("】") > 0) {
+html += "<h3>" + escapeHtml(p) + "</h3>";
+} else {
+html += "<p>" + escapeHtml(p) + "</p>";
+paraCount++;
+
+if(photos.length > 0 && photoIndex < photos.length && paraCount % 2 === 0) {
+html += '<img src="' + photos[photoIndex] + '">';
+photoIndex++;
+}
+}
 }
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+while(photoIndex < photos.length) {
+html += '<img src="' + photos[photoIndex] + '">';
+photoIndex++;
 }
 
-init();
+html += '<div style="margin-top:20px;text-align:center">';
+html += '<img src="end-photo1.jpg" style="max-width:100%;margin-bottom:8px">';
+html += '<img src="end-photo2.jpg" style="max-width:100%">';
+html += '</div>';
+
+html += '<div style="margin-top:16px;background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px">';
+html += '<div style="margin-bottom:6px"><strong>【供稿】</strong>保和镇党政办</div>';
+html += '<div>编辑：' + escapeHtml(editor) + ' | 一审：' + escapeHtml(review1) + ' | 二审：' + escapeHtml(review2) + ' | 终审：' + escapeHtml(final) + '</div>';
+html += '</div>';
+
+document.getElementById("preview").innerHTML = html;
+document.getElementById("preview").style.display = "block";
+}
+
+function copyHTML() {
+var html = document.getElementById("preview").innerHTML;
+if(!html) {
+alert("请先生成预览");
+return;
+}
+
+var wrapper = '<div style="max-width:677px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;padding:16px;color:#333">' + html + '</div>';
+
+var ta = document.createElement("textarea");
+ta.value = wrapper;
+document.body.appendChild(ta);
+ta.select();
+document.execCommand("copy");
+document.body.removeChild(ta);
+alert("HTML已复制到剪贴板");
+}
+
+function escapeHtml(str) {
+str = str.replace(/&/g, "&amp;");
+str = str.replace(/</g, "&lt;");
+str = str.replace(/>/g, "&gt;");
+str = str.replace(/"/g, "&quot;");
+return str;
+}
 </script>
 </body>
 </html>
