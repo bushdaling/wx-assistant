@@ -797,7 +797,7 @@ function humanizeText(text) {
   return function(today) { return CONTENT_EXPANDERS['默认'](today, theme); };
 }
 
-async function aiGenerate() {
+function aiGenerate() {
   const theme = document.getElementById('ai-theme').value.trim();
   if (!theme) { toast('请输入文章主题！'); return; }
 
