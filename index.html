@@ -65,6 +65,8 @@ textarea{min-height:300px;height:60vh;resize:vertical;font-family:inherit;line-h
 
 <div class="card">
 <div class="card-title">署名信息</div>
+<div class="label">供稿单位</div>
+<input type="text" id="provider" placeholder="供稿单位" style="width:100%" value="保和镇党政办">
 <div class="row">
 <input type="text" id="editor" placeholder="编辑" style="width:80px" value="赵倩颖">
 <input type="text" id="review1" placeholder="一审" style="width:80px" value="唐艺轩">
@@ -225,7 +227,8 @@ html += '<img src="end-photo1.jpg" style="max-width:100%;margin-bottom:8px">';
 html += '<img src="end-photo2.jpg" style="max-width:100%">';
 html += "</div>";
 html += '<div style="margin-top:16px;background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px">';
-html += "<div><strong>【供稿】</strong>保和镇党政办</div>";
+var provider = document.getElementById("provider").value || "保和镇党政办";
+html += "<div><strong>【供稿】</strong>" + esc(provider) + "</div>";
 html += "<div>编辑：" + esc(editor) + " | 一审：" + esc(review1) + " | 二审：" + esc(review2) + " | 终审：" + esc(final) + "</div>";
 html += "</div>";
 
