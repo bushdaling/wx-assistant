@@ -137,7 +137,7 @@ function checkGate() {
 var ans = document.getElementById("gate-answer").value.trim();
 if (ans === "赵美丽") {
 var gate = document.getElementById("gate");
-gate.parentNode.removeChild(gate);
+gate.style.display = "none";
 } else {
 document.getElementById("gate-error").style.display = "block";
 document.getElementById("gate-answer").value = "";
