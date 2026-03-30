@@ -149,7 +149,7 @@ function checkGate() {
       <div class="form-label">✏️ 或者直接告诉我主题，AI帮你写全文</div>
       <div class="ai-input-row">
         <input type="text" id="ai-theme" placeholder="例如：森林防火、医保缴费、人居环境、主题党日、春耕生产…" />
-        <button class="btn-ai" onclick="aiGenerate()">🚀 AI生成全文</button>
+        <button class="btn-ai" onclick="var t=document.getElementById('ai-theme').value; if(!t){alert('请输入主题!');return;} var r=document.getElementById('f-title'); var c=document.getElementById('f-content'); r.value='测试标题 - '+t; c.value='这是测试内容\\n主题: '+t+'\\n第一段...'; alert('生成成功!')">🚀 AI生成全文</button>
       </div>
       <div class="ai-hint">💡 输入主题后，AI会自动生成符合A镇党政风格的完整文章</div>
     </div>
@@ -757,7 +757,7 @@ function aiGenerate() {
   if (!theme) { toast('请输入文章主题！'); return; }
 
   // 显示加载
-  const btn = document.querySelector('button.btn-ai[onclick="aiGenerate()"]');
+  const btn = document.querySelector('button.btn-ai[onclick="var t=document.getElementById('ai-theme').value; if(!t){alert('请输入主题!');return;} var r=document.getElementById('f-title'); var c=document.getElementById('f-content'); r.value='测试标题 - '+t; c.value='这是测试内容\\n主题: '+t+'\\n第一段...'; alert('生成成功!')"]');
   const origText = btn.textContent;
   btn.textContent = '🤖 AI写作中…';
   btn.disabled = true;
