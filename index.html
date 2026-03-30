@@ -747,6 +747,10 @@ const CONTENT_EXPANDERS = {
 }
 
 function aiGenerate() {
+  // 调试：验证函数被调用
+  console.log('aiGenerate 被调用');
+  alert('开始生成...');
+  
   const theme = document.getElementById('ai-theme').value.trim();
   if (!theme) { toast('请输入文章主题！'); return; }
 
